@@ -1,5 +1,14 @@
 package com.epam.rd.autocode.spring.project.model;
 
+import lombok.*;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
 public class User {
-    // TODO Place your code here
+    private Long id;
+    private String email;
+    private String password;
+    private String name;
 }

@@ -1,5 +1,13 @@
 package com.epam.rd.autocode.spring.project.dto;
 
+import com.epam.rd.autocode.spring.project.model.Book;
+import lombok.*;
+
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
 public class BookItemDTO {
-    // TODO Place your code here
+    private String bookName;
+    private Integer quantity;
 }

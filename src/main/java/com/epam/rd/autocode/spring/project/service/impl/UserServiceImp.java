@@ -29,11 +29,11 @@ public class UserServiceImp implements UserService {
     private final UserRepository userRepository;
     private final ModelMapper modelMapper;
 
-    public Optional<UserRegisterResponseDto> findByEmail(String email) {
-        log.info("findByEmail(email={})", email);
-        return userRepository.findByEmail(email)
-                .map(userEntity -> modelMapper.map(userEntity, UserRegisterResponseDto.class));
-    }
+//    public Optional<UserRegisterResponseDto> findByEmail(String email) {
+//        log.info("findByEmail(email={})", email);
+//        return userRepository.findByEmail(email)
+//                .map(userEntity -> modelMapper.map(userEntity, UserRegisterResponseDto.class));
+//    }
 
 
     @Override

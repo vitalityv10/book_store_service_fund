@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${client.name}"></title>
+    <style>
+        body { font-family: sans-serif; line-height: 1.6; max-width: 600px; margin: 20px auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px; }
+        h1 { color: #333; border-bottom: 2px solid #f4f4f4; padding-bottom: 10px; }
+        .info-row { margin-bottom: 10px; display: flex; }
+        .label { font-weight: bold; width: 150px; color: #555; }
+        .value { flex: 1; }
+        .back-link { display: inline-block; margin-top: 20px; text-decoration: none; color: #007bff; }
+    </style>
+</head>
+<body>
+
+<div th:insert="~{fragment::header}"></div>
+
+<h1 th:text="${client.name}"></h1>
+
+<div class="info-row">
+    <span class="label" th:text="#{client.name} + ':'"></span>
+    <span class="value" th:text="${client.name}">Автор</span>
+</div>
+
+<div class="info-row">
+    <span class="label" th:text="#{client.email} + ':'"></span>
+    <span class="value" th:text="${client.email}"></span>
+</div>
+
+<div class="info-row">
+    <span class="label" th:text="#{login.password} + ':'"></span>
+    <span class="value">********</span>
+</div>
+
+<div class="info-row">
+    <span class="label" th:text="#{client.balance} + ':'"></span>
+    <span class="value" th:text="${client.balance}"></span>
+</div>
+
+<div th:insert="~{fragment::client_button}"></div>
+
+<a href="/books" class="back-link" th:text="#{label.back}">← Назад до списку</a>
+
+</body>
+</html>

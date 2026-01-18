@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="#{label.clients}"></title>
+    <style>
+        .filter-group { margin-bottom: 15px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+        .filter-group label { font-weight: bold; }
+        input { padding: 5px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+        .pagination { margin-top: 20px; display: flex; gap: 10px; list-style: none; }
+    </style>
+</head>
+<body>
+
+<div th:insert="~{fragment::header}"></div>
+
+<form th:action="@{/clients}" method="get">
+    <div class="filter-group">
+        <label><span th:text="#{label.page}"></span></label>
+        <input type="number" name="page" th:value="${clients.metaData.page}" min="0" style="width: 50px;">
+
+        <label><span th:text="#{label.size}"></span></label>
+        <input type="number" name="size" th:value="${clients.metaData.size}" min="1" style="width: 50px;">
+
+        <label th:text="#{label.sort}"></label>
+        <select name="sort">
+            <option value="name,asc"
+                    th:selected="${param.sort != null and param.sort[0] == 'name,asc'}"
+                    th:text="#{sort.name.asc}"></option>
+            <option value="name,desc"
+                    th:selected="${param.sort != null and param.sort[0] == 'name,desc'}"
+                    th:text="#{sort.name.desc}"></option>
+        </select>
+
+        <button type="submit" class="btn btn-primary"> <span th:text="#{button.filter}"></span></button>
+    </div>
+
+    <div class="filter-group">
+        <label><span th:text="#{button.search}"></span></label>
+        <input type="text" name="name"
+               th:value="${clientFilter.getName()}"
+               th:placeholder="#{label.search.placeholder_cl}"
+               style="width: 250px;">
+        <button type="submit" class="btn btn-primary">
+            <span th:text="#{button.search}">Пошук</span>
+        </button>
+    </div>
+</form>
+
+<hr>
+
+<table>
+    <thead>
+    <tr>
+        <th><span th:text="#{client.name}"></span></th>
+        <th><span th:text="#{client.email}"></span></th>
+        <th><span th:text="#{client.balance}"></span></th>
+        <th sec:authorize="hasAnyRole('ADMIN', 'EMPLOYEE')"><span th:text="#{label.actions}"></span></th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="c : ${clients.content}">
+        <td th:text="${c.name}"
+            th:style="${c.blocked} ? 'color: red;' : ''">
+        </td>
+        <td th:text="${c.email}"></td>
+        <td th:text="${c.balance}"></td>
+        <td sec:authorize="hasAnyRole('ADMIN', 'EMPLOYEE')">
+            <a th:href="@{/clients/block(block=true, email=${c.email})}"
+               class="btn btn-warning btn-sm" style="text-decoration: none; background: #ffc107; padding: 5px 10px; border-radius: 3px; color: black;">
+                <span th:text="#{button.block}">Block</span>
+            </a>
+            <a th:href="@{/clients/block(block=false, email=${c.email})}"
+               class="btn btn-success btn-sm" style="text-decoration: none; background: #28a745; padding: 5px 10px; border-radius: 3px; color: white;">
+                <span th:text="#{button.unblock}"></span>
+            </a>
+        </td>
+    </tr>
+    </tbody>
+</table>
+
+<div th:if="${#lists.isEmpty(clients.content)}">
+    <p th:text="#{label.not_found}"></p>
+</div>
+
+<div th:with="meta=${clients.metaData}, totalPages=${T(java.lang.Math).ceil(meta.totalElements * 1.0 / meta.size).intValue()}">
+    <ul class="pagination" th:if="${totalPages > 1}">
+        <li th:if="${meta.page > 0}">
+            <a th:href="@{/clients(page=${meta.page - 1}, size=${meta.size}, name=${clientFilter.getName()})}">
+                &laquo; <span th:text="#{label.previous}">Попередня</span>
+            </a>
+        </li>
+        <li>
+            <span th:text="#{label.page.current(${meta.page + 1}, ${totalPages})}"></span>
+        </li>
+        <li th:if="${meta.page + 1 < totalPages}">
+            <a th:href="@{/clients(page=${meta.page + 1}, size=${meta.size}, name=${clientFilter.getName()})}">
+                <span th:text="#{label.next}"></span> &raquo;
+            </a>
+        </li>
+    </ul>
+</div>
+
+</body>
+</html>

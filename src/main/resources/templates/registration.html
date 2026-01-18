@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+                xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title>Registration</title>
+    <style>
+        body { font-family: sans-serif; line-height: 1.6; max-width: 450px; margin: 60px auto; padding: 25px; border: 1px solid #ddd; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        h1 { text-align: center; color: #333; margin-bottom: 25px; border-bottom: 2px solid #f4f4f4; padding-bottom: 10px; }
+        .info-row { margin-bottom: 15px; display: flex; flex-direction: column; }
+        .label { font-weight: bold; margin-bottom: 5px; color: #555; }
+        .value-input { padding: 10px; border: 1px solid #ccc; border-radius: 4px; width: 100%; box-sizing: border-box; font-size: 14px; }
+        .value-input:focus { border-color: #0d6efd; outline: none; box-shadow: 0 0 0 2px rgba(13,110,253,0.25); }
+        .error-message { color: #dc3545; font-size: 0.85em; margin-top: 5px; font-weight: 500; }
+        .btn-submit { display: block; width: 100%; padding: 12px; background-color: #198754; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; margin-top: 20px; transition: background 0.3s; }
+        .btn-submit:hover { background-color: #157347; }
+        .login-section { text-align: center; margin-top: 25px; padding-top: 15px; border-top: 1px solid #eee; font-size: 14px; }
+        .btn-link { background: none; border: none; color: #007bff; text-decoration: underline; cursor: pointer; padding: 0; font-weight: bold; }
+        .locale-container { display: flex; justify-content: flex-end; margin-bottom: 15px; }
+    </style>
+</head>
+<body>
+
+<div class="locale-container">
+    <div th:insert="~{fragment::locale}"></div>
+</div>
+
+<h1 th:text="#{register.button}"></h1>
+
+<form th:action="@{${registerAction}}" method="POST" th:object="${user}">
+
+    <div class="info-row">
+        <label class="label" for="email" th:text="#{login.email}"></label>
+        <input class="value-input" id="email" th:field="*{email}" type="email" placeholder="example@mail.com">
+        <div class="error-message" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></div>
+        <div class="error-message" th:if="${emailError}" th:text="${emailError}"></div>
+    </div>
+
+    <div class="info-row">
+        <label class="label" for="name" th:text="#{client.name}"></label>
+        <input class="value-input" id="name" th:field="*{name}" type="text" placeholder="John Doe">
+        <div class="error-message" th:if="${#fields.hasErrors('name')}" th:errors="*{name}"></div>
+    </div>
+
+    <div class="info-row">
+        <label class="label" for="password" th:text="#{login.password}"></label>
+        <input class="value-input" id="password" th:field="*{password}" type="password" placeholder="********">
+        <div class="error-message" th:if="${#fields.hasErrors('password')}" th:errors="*{password}"></div>
+    </div>
+
+    <div class="info-row" sec:authorize="hasAnyRole('EMPLOYEE', 'ADMIN')">
+        <label class="label" for="birth" th:text="#{login.password}"></label>
+        <input class="value-input" id="birth" th:field="*{password}" type="password" placeholder="********">
+        <div class="error-message" th:if="${#fields.hasErrors('password')}" th:errors="*{password}"></div>
+    </div>
+
+
+    <button type="submit" class="btn-submit" th:text="#{register.button}"></button>
+</form>
+
+<div class="login-section">
+    <span th:text="#{register.already_has_account}">Already have an account?</span>
+    <form th:action="@{/auth/login}" method="get" style="display: inline;">
+        <button type="submit" class="btn-link">
+            <span th:text="#{login.button}"></span>
+        </button>
+    </form>
+</div>
+
+</body>
+</html>

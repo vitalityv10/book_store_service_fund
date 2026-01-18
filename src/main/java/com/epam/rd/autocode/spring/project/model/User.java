@@ -1,21 +1,36 @@
 package com.epam.rd.autocode.spring.project.model;
 
+import com.epam.rd.autocode.spring.project.model.enums.Role;
 import jakarta.persistence.*;
 import lombok.*;
 
-@Data
-@AllArgsConstructor
+import java.math.BigDecimal;
+import java.util.Set;
+
+@MappedSuperclass
+@Getter
+@Setter
 @NoArgsConstructor
-@Builder
+@AllArgsConstructor
 public class User {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "ID")
     private Long id;
+
+    @Column(name = "EMAIL", unique = true)
     private String email;
-    private String password;
+
+    @Column(name = "NAME")
     private String name;
 
-//    @ElementCollection(fetch = FetchType.EAGER, targetClass = Role.class)
-//    @Enumerated(EnumType.STRING)
-//    @JoinTable(name = "client_id", joinColumns = {@JoinColumn(name = "client_id") })
-//    @Column(name = "role", nullable = false)
-//    private Role role;
+    @Column(name = "PASSWORD")
+    private String password;
+
+    @ElementCollection(fetch = FetchType.EAGER, targetClass =  Role.class)
+    @Enumerated(EnumType.STRING)
+    @JoinTable(name = "user_role", joinColumns = {@JoinColumn(name = "email"
+            ,referencedColumnName = "email") })
+    @Column(name = "role", nullable = false)
+    private Set<Role> roles;
 }

@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="uk" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>409 - Конфлікт</title>
+    <style>
+        body { font-family: sans-serif; text-align: center; padding: 50px; color: #333; }
+        h1 { font-size: 50px; color: #f39c12; }
+        p { font-size: 18px; }
+        .back-link { display: inline-block; margin-top: 20px; color: #2c3e50; text-decoration: none; background: #ecf0f1; padding: 10px 20px; border-radius: 5px; }
+    </style>
+</head>
+<body>
+<h1>409</h1>
+<h2>Конфлікт даних</h2>
+<p th:text="${error}">Виникла суперечність при обробці запиту.</p>
+<button onclick="history.back()" class="back-link">Повернутися назад</button>
+</body>
+</html>

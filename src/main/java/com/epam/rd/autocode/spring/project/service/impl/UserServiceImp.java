@@ -1,22 +1,18 @@
 package com.epam.rd.autocode.spring.project.service.impl;
 
-import com.epam.rd.autocode.spring.project.dto.UserRegisterResponseDto;
-import com.epam.rd.autocode.spring.project.entity.UserEntity;
+import com.epam.rd.autocode.spring.project.model.User;
 import com.epam.rd.autocode.spring.project.model.enums.Role;
-import com.epam.rd.autocode.spring.project.repo.UserRepository;
+import com.epam.rd.autocode.spring.project.repo.ClientRepository;
+import com.epam.rd.autocode.spring.project.repo.EmployeeRepository;
 import com.epam.rd.autocode.spring.project.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.modelmapper.ModelMapper;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -24,36 +20,40 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Slf4j
 public class UserServiceImp implements UserService {
-
-    private final PasswordEncoder passwordEncoder;
-    private final UserRepository userRepository;
-    private final ModelMapper modelMapper;
-
-//    public Optional<UserRegisterResponseDto> findByEmail(String email) {
-//        log.info("findByEmail(email={})", email);
-//        return userRepository.findByEmail(email)
-//                .map(userEntity -> modelMapper.map(userEntity, UserRegisterResponseDto.class));
-//    }
-
+    private final ClientRepository clientRepository;
+    private final EmployeeRepository employeeRepository;
 
     @Override
-    @Transactional
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        UserRegisterResponseDto userRegisterRequestDto = findByEmail(username)
-                .orElseThrow(() -> new UsernameNotFoundException(username));
+    @Transactional(readOnly = true)
+    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
 
-        return new User(
-                userRegisterRequestDto.getEmail(),
-                userRegisterRequestDto.getPassword(),
-                userRegisterRequestDto.getRoles().stream().map(role -> new SimpleGrantedAuthority("ROLE_"+role.name())).collect(Collectors.toSet())
+        return clientRepository.findByEmail(email)
+                .map(client -> (com.epam.rd.autocode.spring.project.model.User) client)
+                .or(() -> employeeRepository.findByEmail(email)
+                        .map(emp -> (com.epam.rd.autocode.spring.project.model.User) emp))
+                .map(UserServiceImp::getUser)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + email));
+    }
+    private static org.springframework.security.core.userdetails.User getUser(User user) {
+        Set<SimpleGrantedAuthority> authorities = user.getRoles().stream()
+                .map(role -> new SimpleGrantedAuthority(role.name()))
+                .collect(Collectors.toSet());
+
+        boolean isBlocked = user.getRoles().contains(Role.ROLE_BLOCKED);
+
+        return new org.springframework.security.core.userdetails.User(
+                user.getEmail(),
+                user.getPassword(),
+                !isBlocked,
+                true,
+                true,
+                true,
+                authorities
         );
     }
 
-    public void createUser(UserRegisterResponseDto userRegisterRequestDto) {
-        userRegisterRequestDto.setRoles(Set.of(Role.CLIENT));
-        UserEntity userEntity = modelMapper.map(userRegisterRequestDto, UserEntity.class);
-        userEntity.setPassword(passwordEncoder.encode(userRegisterRequestDto.getPassword()));
-        userRepository.save(userEntity);
+    @Override
+    public boolean existsByEmail(String email) {
+        return clientRepository.findByEmail(email).isPresent() || employeeRepository.findByEmail(email).isPresent();
     }
-
 }

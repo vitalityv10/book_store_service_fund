@@ -59,6 +59,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
         String username = jwtUtils.getSubject(refreshToken);
       //  String role = jwtUtils.getRole(refreshToken);
+
+        if (username == null || username.isBlank()) {
+            log.warn("Username is null in refresh token");
+            return;
+        }
         Set<String> roles = jwtUtils.getRoles(refreshToken);
 
         UserDetails userDetails = org.springframework.security.core.userdetails.User
@@ -91,11 +96,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 );
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             } else {
-                log.warn("Користувач {} намагався увійти, але він заблокований", subject);
+                log.warn("User {} tried to login, but he disabled", subject);
                 SecurityContextHolder.clearContext();
             }
         } catch (Exception e) {
-            log.error("Помилка автентифікації: {}", e.getMessage());
+            log.error("Auth error: {}", e.getMessage());
             SecurityContextHolder.clearContext();
         }
     }

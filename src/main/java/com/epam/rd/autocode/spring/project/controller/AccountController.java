@@ -6,11 +6,10 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
-@Controller()
-@RequestMapping("/accounts")
+@Controller
 public class AccountController {
 
-    @GetMapping
+    @GetMapping("/accounts")
     public String account(Authentication authentication) {
         String email = authentication.getName();
         boolean isEmployee = authentication.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_EMPLOYEE"));
@@ -22,4 +21,16 @@ public class AccountController {
             return "redirect:/clients/account/" + email;
         }
     }
+
+//    @GetMapping("/orders")
+//    public String orders(Authentication authentication) {
+//        String email = authentication.getName();
+//        boolean isEmployee = authentication.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_EMPLOYEE"));
+//        boolean isAdmin = authentication.getAuthorities().contains(new SimpleGrantedAuthority("ROLE_ADMIN"));
+//        if(isEmployee || isAdmin)
+//            return "redirect:/orders/my/all/" + email;
+//        else{
+//            return "redirect:/orders/my/" + email;
+//        }
+//    }
 }

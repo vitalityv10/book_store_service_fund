@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
     <title th:text="${book.name}">Деталі книги</title>
@@ -45,27 +46,34 @@
 </div>
 
 <div class="info-row">
-    <span class="label" th:text="#{book.publicationDate} + ':'">Дата видання:</span>
-    <span class="value" th:text="${#temporals.format(book.publicationDate, 'dd.MM.yyyy')}">01.01.2024</span>
+    <span class="label" th:text="#{book.publicationDate} + ':'"></span>
+    <span class="value" th:text="${#temporals.format(book.publicationDate, 'dd.MM.yyyy')}"></span>
 </div>
 
 <div class="info-row">
-    <span class="label" th:text="#{book.price} + ':'">Ціна:</span>
-    <span class="value"><strong th:text="${book.price} + ' грн'">0.00</strong></span>
+    <span class="label" th:text="#{book.price} + ':'"></span>
+    <span class="value"><strong th:text="${book.price} + ' грн'"></strong></span>
 </div>
 
 <div th:if="${book.characteristics}" class="info-row">
-    <span class="label" th:text="#{book.characteristics} + ':'">Характеристики:</span>
-    <span class="value" th:text="${book.characteristics}">Характеристики</span>
+    <span class="label" th:text="#{book.characteristics} + ':'"></span>
+    <span class="value" th:text="${book.characteristics}"></span>
 </div>
 
 <div class="description">
-    <h3 th:text="#{book.description}">Опис</h3>
-    <p th:text="${book.description}">Тут буде опис книги...</p>
+    <h3 th:text="#{book.description}"></h3>
+    <p th:text="${book.description}"></p>
 </div>
+
+<td sec:authorize="hasAnyRole('CLIENT')">
+    <a th:href="@{/carts/add/{n}(n=${book.name})}" th:method="get"
+       style="text-decoration: none; background: #ffc107; padding: 5px 10px; border-radius: 3px; color: black;">
+        <span th:text="#{button.cart.add}"></span>
+    </a>
+</td>
 <div th:insert="~{fragment::delete_book}"></div>
 
-<a href="/books" class="back-link" th:text="#{label.back}">← Назад до списку</a>
+<a href="/books" class="back-link" th:text="#{label.back}"></a>
 
 </body>
 </html>

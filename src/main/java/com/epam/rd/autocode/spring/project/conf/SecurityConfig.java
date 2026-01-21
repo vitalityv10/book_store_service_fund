@@ -44,7 +44,7 @@ class SecurityConfig{
                                 "/books/search").permitAll()
                         .requestMatchers("/clients/account/**",
                                 "/account").hasRole("CLIENT")
-                        .requestMatchers("/books/edit", "/orders/my/employee",
+                        .requestMatchers("/books/edit", "/orders/myOrders",
                                 "/orders/update", "/clients", "/account").hasRole("EMPLOYEE")
                         .requestMatchers("/books/add").hasAnyRole("ADMIN", "EMPLOYEE")
                         .requestMatchers("/auth/employee/registration").hasRole("ADMIN")

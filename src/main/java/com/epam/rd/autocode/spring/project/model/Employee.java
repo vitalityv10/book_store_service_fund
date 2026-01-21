@@ -1,20 +1,21 @@
 package com.epam.rd.autocode.spring.project.model;
 
+import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDate;
 
-@NoArgsConstructor
 @Getter
 @Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Entity
+@Table(name ="EMPLOYEES")
 public class Employee extends User{
+    @Column(name = "PHONE")
     private String phone;
+    @Column(name = "BIRTH_DATE")
     private LocalDate birthDate;
-
-    public Employee(Long id, String email, String password,
-                    String name, String phone, LocalDate birthDate) {
-        super(id, email, password, name);
-        this.phone = phone;
-        this.birthDate = birthDate;
-    }
 }
+//-- INSERT INTO EMPLOYEES (BIRTH_DATE, EMAIL, NAME,
+// PASSWORD, PHONE)

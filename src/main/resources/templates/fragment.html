@@ -23,34 +23,25 @@
             </button>
         </form>
 
-        <form th:action="@{/books/add}" method="get"
-              sec:authorize="hasAnyRole('ADMIN', 'EMPLOYEE')" class="m-0">
-            <button type="submit" class="btn btn-primary">
-                <span th:text="#{button.book.add}"></span>
-            </button>
-        </form>
-
-        <form th:action="@{/auth/employee/registration}" method="get"
-              sec:authorize="hasAnyRole('ADMIN', 'EMPLOYEE')" class="m-0">
-            <button type="submit" class="btn btn-primary">
-                <span th:text="#{button.employee.register}"></span>
-            </button>
-        </form>
-
-        <form th:action="@{/clients}" method="get"
-              sec:authorize="hasAnyRole('ADMIN', 'EMPLOYEE')" class="m-0">
-            <button type="submit" class="btn btn-primary">
-                <span th:text="#{label.clients}"></span>
-            </button>
-        </form>
-
-        <form th:action="@{/accounts}" method="get"
-            sec:authorize="hasAnyRole('CLIENT', 'EMPLOYEE', 'ADMIN')" class="m-0">
+        <form th:action="@{/accounts}" method="get" sec:authorize="isAuthenticated()" class="m-0">
             <button type="submit" class="btn btn-primary">
                 <span th:text="#{button.profile}"></span>
             </button>
         </form>
 
+        <form th:action="@{/orders/my}" method="get" sec:authorize="isAuthenticated()" class="m-0">
+            <button type="submit" class="btn btn-primary">
+                <span th:text="#{label.orders}"></span>
+            </button>
+        </form>
+
+        <form th:action="@{/carts}" method="get" sec:authorize="hasAnyRole('CLIENT')" class="m-0">
+            <button type="submit" class="btn btn-primary">
+                <span th:text="#{label.cart.title}"></span>
+            </button>
+        </form>
+
+        <div th:insert="~{fragment::admin_panel}" class="m-0"></div>
         <div th:insert="~{fragment::locale}" class="ms-auto"></div>
     </div>
 </div>
@@ -66,14 +57,14 @@
 </div>
 
 <div th:fragment="delete_book">
-    <form th:action="@{/books/info/delete/{n}(n=${book.name})}" method="post">
+    <form th:action="@{/books/info/delete/{n}(n=${book.name})}" method="post"
+          sec:authorize="hasAnyRole('EMPLOYEE', 'ADMIN')" class="m-0">
         <input type="hidden" name="_method" value="DELETE">
         <button type="submit" class="btn btn-danger">
             <span th:text="#{button.delete}"></span>
         </button>
     </form>
 </div>
-
 
 <div th:fragment="client_button">
     <form th:action="@{/clients/account/edit/{n}(n=${client.email})}" method="get">
@@ -88,6 +79,55 @@
             <span th:text="#{button.delete}"></span>
         </button>
     </form>
+</div>
+
+<div th:fragment="employee_button">
+    <form th:action="@{/employees/account/edit/{n}(n=${employee.email})}" method="get">
+        <button type="submit" class="btn btn-danger">
+            <span th:text="#{button.edit}"></span>
+        </button>
+    </form>
+
+    <form th:action="@{/employees/account/delete/{n}(n=${employee.email})}" method="post">
+        <input type="hidden" name="_method" value="DELETE">
+        <button type="submit" class="btn btn-danger">
+            <span th:text="#{button.delete}"></span>
+        </button>
+    </form>
+</div>
+
+<div th:fragment="admin_panel"
+        sec:authorize="hasAnyRole('ADMIN')">
+
+    <form th:action="@{/books/add}" method="get">
+        <button type="submit" class="btn btn-primary">
+            <span th:text="#{button.book.add}"></span>
+        </button>
+    </form>
+
+    <form th:action="@{/auth/employee/registration}" method="get">
+        <button type="submit" class="btn btn-primary">
+            <span th:text="#{button.employee.register}"></span>
+        </button>
+    </form>
+
+    <form th:action="@{/clients}" method="get">
+        <button type="submit" class="btn btn-primary">
+            <span th:text="#{label.clients}"></span>
+        </button>
+    </form>
+
+    <form th:action="@{/employees}" method="get">
+        <button type="submit" class="btn btn-primary">
+            <span th:text="#{label.employee}"></span>
+        </button>
+    </form>
+    <form th:action="@{/orders/all}" method="get">
+        <button type="submit" class="btn btn-primary">
+            <span th:text="#{label.orders}"></span>
+        </button>
+    </form>
+
 </div>
 
 </body>

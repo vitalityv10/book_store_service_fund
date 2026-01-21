@@ -23,7 +23,7 @@ public class AuthRegisterController {
     public String showRegistrationForm(Model model) {
         model.addAttribute("user", new ClientDTO());
         model.addAttribute("registerAction", "/auth/registration");
-        return "registration";
+        return "auth/registration";
     }
 
     @RequestMapping(value = "/registration", method =  RequestMethod.POST)
@@ -36,7 +36,7 @@ public class AuthRegisterController {
     public String showRegistrationFormForEmpl(Model model) {
         model.addAttribute("user", new EmployeeDTO());
         model.addAttribute("registerAction", "/auth/employee/registration");
-        return "registration";
+        return "auth/registration";
     }
 
 
@@ -50,11 +50,11 @@ public class AuthRegisterController {
     private String handleRegistration(Object dto, BindingResult result, Model model,
                                        String email, Runnable saveTask) {
         if (result.hasErrors()) {
-            return "registration";
+            return "auth/registration";
         }
         if (userService.existsByEmail(email)) {
             model.addAttribute("emailError", "Користувач з таким email вже існує");
-            return "registation";
+            return "auth/registration";
         }
             saveTask.run();
             log.info("Successfully registered: {}", email);

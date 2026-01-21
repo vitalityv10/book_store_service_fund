@@ -1,14 +1,12 @@
 package com.epam.rd.autocode.spring.project.dto;
 
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 import lombok.*;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDate;
 
-@Data
+@Getter @Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
@@ -28,6 +26,12 @@ public class EmployeeDTO{
     @Size(min = 2, max = 50, message = "{validation.user.name.size}")
     private String name;
 
+    @NotBlank(message = "{validation.user.phone.not_blank}")
+    @Pattern(regexp = "^\\+?[0-9]{10,15}$", message = "{validation.user.phone.invalid}")
     private String phone;
+
+    @NotNull(message = "{validation.user.birthDate.not_null}")
+    @Past(message = "{validation.user.birthDate.past}")
+    @DateTimeFormat(pattern = "yyyy-MM-dd")
     private LocalDate birthDate;
 }

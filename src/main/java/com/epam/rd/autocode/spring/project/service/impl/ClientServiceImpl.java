@@ -1,10 +1,9 @@
 package com.epam.rd.autocode.spring.project.service.impl;
 
 import com.epam.rd.autocode.spring.project.aop.BusinessLoggingEvent;
-import com.epam.rd.autocode.spring.project.dto.BookFilter;
-import com.epam.rd.autocode.spring.project.dto.ClientDTO;
-import com.epam.rd.autocode.spring.project.dto.ClientFilter;
-import com.epam.rd.autocode.spring.project.dto.QPredicates;
+import com.epam.rd.autocode.spring.project.dto.*;
+import com.epam.rd.autocode.spring.project.dto.topUp.ClientTopUpRequest;
+import com.epam.rd.autocode.spring.project.dto.topUp.ClientTopUpResponse;
 import com.epam.rd.autocode.spring.project.exception.NotFoundException;
 import com.epam.rd.autocode.spring.project.model.QClient;
 import com.epam.rd.autocode.spring.project.model.enums.Role;
@@ -12,7 +11,6 @@ import com.epam.rd.autocode.spring.project.model.Client;
 import com.epam.rd.autocode.spring.project.repo.ClientRepository;
 import com.epam.rd.autocode.spring.project.service.ClientService;
 import com.querydsl.core.BooleanBuilder;
-import com.querydsl.core.types.Predicate;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,6 +20,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.*;
 
 @Service
@@ -51,8 +50,7 @@ public class ClientServiceImpl implements ClientService {
     @Transactional
     @BusinessLoggingEvent(message = "Client was updated")
     public ClientDTO updateClientByEmail(String email, ClientDTO client) {
-        Client clientToUpdate =  clientRepository.findByEmail(email)
-                .orElseThrow(() -> new NotFoundException("Client not found"));
+        Client clientToUpdate = findClientByEmail(email);
         clientToUpdate.setPassword(passwordEncoder.encode(client.getPassword()));
         clientToUpdate.setName(client.getName());
         clientToUpdate.setEmail(client.getEmail());
@@ -67,8 +65,7 @@ public class ClientServiceImpl implements ClientService {
     @Transactional
     @BusinessLoggingEvent(message = "Client was deleted")
     public void deleteClientByEmail(String email) {
-        Client client =  clientRepository.findByEmail(email)
-                .orElseThrow(() -> new NotFoundException("Client not found"));
+        Client client = findClientByEmail(email);
         clientRepository.delete(client);
     }
 
@@ -108,8 +105,7 @@ public class ClientServiceImpl implements ClientService {
     @Transactional
     @BusinessLoggingEvent( message = "Client unblocked")
     public void unblockClient(String email) {
-        Client client =  clientRepository.findByEmail(email)
-                .orElseThrow(() -> new NotFoundException("Client not found"));
+        Client client = findClientByEmail(email);
 
         client.getRoles().remove(Role.valueOf("ROLE_BLOCKED"));
         clientRepository.save(client);
@@ -117,10 +113,9 @@ public class ClientServiceImpl implements ClientService {
 
     @Override
     @Transactional
-    @BusinessLoggingEvent( message = "Client blocked")
+    @BusinessLoggingEvent(message = "Client blocked")
     public ClientDTO blockClient(String email) {
-        Client client = clientRepository.findByEmail(email)
-                .orElseThrow(() -> new NotFoundException("Client not found"));
+        Client client = findClientByEmail(email);
 
         if (!client.getRoles().contains(Role.valueOf("ROLE_BLOCKED"))) {
             client.getRoles().add(Role.ROLE_BLOCKED);
@@ -128,6 +123,23 @@ public class ClientServiceImpl implements ClientService {
         }
 
         return modelMapper.map(client, ClientDTO.class);
+    }
+
+    @Override
+    @Transactional
+    @BusinessLoggingEvent(message = "Client top up his balance")
+    public ClientTopUpResponse topUpClientByEmail(String email, ClientTopUpRequest clientTopUpRequest) {
+        Client clientToTopUp = findClientByEmail(email);
+        BigDecimal clientBalance = clientToTopUp.getBalance();
+        BigDecimal totalBalance = clientBalance.add(clientTopUpRequest.balance());
+        clientToTopUp.setBalance(totalBalance);
+        Client topUpClient =  clientRepository.save(clientToTopUp);
+        return modelMapper.map(topUpClient, ClientTopUpResponse.class);
+    }
+
+    private Client findClientByEmail(String email) {
+        return clientRepository.findByEmail(email)
+                .orElseThrow(() -> new NotFoundException("Client not found"));
     }
 
 }

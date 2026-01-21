@@ -4,6 +4,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.MessageSource;
 import org.springframework.context.NoSuchMessageException;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.expression.spel.SpelEvaluationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.DisabledException;
@@ -12,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.NoHandlerFoundException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
+import org.thymeleaf.exceptions.TemplateProcessingException;
 
 import java.util.Locale;
 
@@ -54,10 +57,15 @@ public class GlobalExceptionHandler {
     }
 
 
-    @ExceptionHandler(Exception.class)
+    @ExceptionHandler({Exception.class, IllegalStateException.class, DataIntegrityViolationException.class})
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ModelAndView handleAll(Exception ex, Locale locale) {
         log.error("Unhandled exception caught: ", ex);
+        if (ex instanceof IllegalStateException) {
+            return createModelAndView("error/404", new IllegalStateException("this book in order"), locale);
+        } else if (ex instanceof DataIntegrityViolationException) {
+            return createModelAndView("error/404", new DataIntegrityViolationException("employee has order"), locale);
+        }
         return createModelAndView("error/404", new Exception("error.internal.server"), locale);
     }
 

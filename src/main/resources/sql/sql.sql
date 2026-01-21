@@ -41,3 +41,56 @@ VALUES ('The Hidden Treasure', 'Adventure', 'ADULT', 24.99, '2018-05-15', 'Emily
        ('Serenade of Souls', 'Fantasy', 'TEEN', 15.99, '2013-05-15', 'Isabella Reed', 330, 'Enchanting realms','A magical fantasy filled with wonder', 'ENGLISH'),
        ('Silent Whispers', 'Mystery', 'ADULT', 27.50, '2021-05-15', 'Benjamin Hall', 420, 'Intricate detective work','A mystery that keeps you on the edge', 'ENGLISH'),
        ('Whirlwind Romance', 'Romance', 'OTHER', 23.25, '2022-05-15', 'Emma Turner', 360, 'Passionate love affair','A romance that sweeps you off your feet', 'ENGLISH');
+
+
+INSERT INTO ORDERS (CLIENT_ID, EMPLOYEE_ID, ORDER_DATE, PRICE, ORDER_STATUS)
+VALUES
+    ((SELECT id FROM CLIENTS WHERE EMAIL = 'client1@example.com'),
+     (SELECT id FROM EMPLOYEES WHERE EMAIL = 'john.doe@email.com'),
+     CURRENT_TIMESTAMP, 24.99 + 16.50, 'PROCESSING'),
+
+    ((SELECT id FROM CLIENTS WHERE EMAIL = 'client2@example.com'),
+     (SELECT id FROM EMPLOYEES WHERE EMAIL = 'john.doe@email.com'),
+     CURRENT_TIMESTAMP, 29.95, 'PROCESSING');
+
+-- 2. Додаємо книги (BookItem) до цих замовлень
+-- До замовлення №1 додаємо книги 'The Hidden Treasure' та 'Echoes of Eternity'
+INSERT INTO BOOK_ITEM (ORDER_ID, BOOK_ID, QUANTITY)
+VALUES
+    ((SELECT ID FROM ORDERS WHERE CLIENT_ID = (SELECT id FROM CLIENTS WHERE EMAIL = 'client1@example.com') LIMIT 1),
+    (SELECT id FROM BOOKS WHERE name = 'The Hidden Treasure'), 1),
+
+    ((SELECT ID FROM ORDERS WHERE CLIENT_ID = (SELECT id FROM CLIENTS WHERE EMAIL = 'client1@example.com') LIMIT 1),
+     (SELECT id FROM BOOKS WHERE name = 'Echoes of Eternity'), 1);
+
+-- До замовлення №2 додаємо книгу 'Whispers in the Shadows'
+INSERT INTO BOOK_ITEM (ORDER_ID, BOOK_ID, QUANTITY)
+VALUES
+    ((SELECT ID FROM ORDERS WHERE CLIENT_ID = (SELECT id FROM CLIENTS WHERE EMAIL = 'client2@example.com') LIMIT 1),
+    (SELECT id FROM BOOKS WHERE name = 'Whispers in the Shadows'), 1);
+
+-- 1. Створюємо кошики для перших двох клієнтів
+-- Для клієнта client1@example.com (Medelyn Wright)
+INSERT INTO CARTS (client_id, price)
+VALUES ((SELECT id FROM CLIENTS WHERE EMAIL = 'client1@example.com'), 41.49);
+
+-- Для клієнта client2@example.com (Landon Phillips)
+INSERT INTO CARTS (client_id, price)
+VALUES ((SELECT id FROM CLIENTS WHERE EMAIL = 'client2@example.com'), 29.95);
+
+-- 2. Додаємо товари в ці кошики (CART_ITEMS)
+
+-- Товари для Medelyn Wright (книги 'The Hidden Treasure' та 'Echoes of Eternity')
+INSERT INTO CART_ITEMS (cart_id, book_id, quantity)
+VALUES
+    ((SELECT id FROM CARTS WHERE client_id = (SELECT id FROM CLIENTS WHERE EMAIL = 'client1@example.com')),
+     (SELECT id FROM BOOKS WHERE name = 'The Hidden Treasure'), 1),
+
+    ((SELECT id FROM CARTS WHERE client_id = (SELECT id FROM CLIENTS WHERE EMAIL = 'client1@example.com')),
+     (SELECT id FROM BOOKS WHERE name = 'Echoes of Eternity'), 1);
+
+-- Товари для Landon Phillips (книга 'Whispers in the Shadows')
+INSERT INTO CART_ITEMS (cart_id, book_id, quantity)
+VALUES
+    ((SELECT id FROM CARTS WHERE client_id = (SELECT id FROM CLIENTS WHERE EMAIL = 'client2@example.com')),
+     (SELECT id FROM BOOKS WHERE name = 'Whispers in the Shadows'), 1);

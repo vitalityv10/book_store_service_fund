@@ -8,6 +8,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -21,7 +22,7 @@ public class BookController {
     private final BookService bookService;
 
     @GetMapping
-    public String showBooks(Pageable pageable, BookFilter bookFilter, Model model) {
+    public String showBooks(@PageableDefault(size = 5) Pageable pageable, BookFilter bookFilter, Model model) {
         Page<BookDTO> bookPage = bookService.getBooksByFilter(bookFilter, pageable);
 
         model.addAttribute("books", PageResponse.of(bookPage));
@@ -62,9 +63,7 @@ public class BookController {
             return "book/book_edit";
 
         BookDTO updatedBook = bookService.updateBookByName(name, bookDTO);
-
         return "redirect:/books/info/" + updatedBook.getName();
-
     }
 
     @GetMapping("/info/{name}")
@@ -92,8 +91,5 @@ public class BookController {
         bookService.addBook(bookDTO);
         return "redirect:/books/info/" + bookDTO.getName();
     }
-
-
-
 
 }

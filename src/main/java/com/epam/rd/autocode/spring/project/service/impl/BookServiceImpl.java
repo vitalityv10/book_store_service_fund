@@ -7,6 +7,7 @@ import com.epam.rd.autocode.spring.project.dto.QPredicates;
 import com.epam.rd.autocode.spring.project.exception.NotFoundException;
 import com.epam.rd.autocode.spring.project.model.Book;
 import com.epam.rd.autocode.spring.project.model.QBook;
+import com.epam.rd.autocode.spring.project.repo.BookItemRepository;
 import com.epam.rd.autocode.spring.project.repo.BookRepository;
 import com.epam.rd.autocode.spring.project.service.BookService;
 import com.querydsl.core.BooleanBuilder;
@@ -16,6 +17,7 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
+import org.slf4j.event.Level;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -29,6 +31,7 @@ import java.util.stream.Collectors;
 public class BookServiceImpl implements BookService {
     private final BookRepository bookRepository;
     private final ModelMapper modelMapper;
+    private final BookItemRepository bookItemRepository;
 
     @Override
     public Page<BookDTO> getAllBooks(Pageable pageable) {
@@ -64,6 +67,10 @@ public class BookServiceImpl implements BookService {
         Book book = bookRepository.getBookByName(name).orElseThrow(
                 () ->  new NotFoundException("Book not found")
         );
+
+        if (bookItemRepository.existsById(book.getId())) {
+            throw new IllegalStateException("Цю книгу не можна видалити, бо на неї оформлені замовлення. Спробуйте її архівувати.");
+        }
         bookRepository.delete(book);
     }
 
@@ -71,12 +78,25 @@ public class BookServiceImpl implements BookService {
     @Transactional
     @BusinessLoggingEvent(message = "Adding new book")
     public BookDTO addBook(BookDTO book) {
-        Book updatedBook = bookRepository.save(modelMapper.map(book, Book.class));
-        return modelMapper.map(updatedBook, BookDTO.class);
+        Book bookToSave = Book.builder()
+                .name(book.getName())
+                .author(book.getAuthor())
+                .price(book.getPrice())
+                .genre(book.getGenre())
+                .ageGroup(book.getAgeGroup())
+                .publicationDate(book.getPublicationDate())
+                .characteristics(book.getCharacteristics())
+                .description(book.getDescription())
+                .pages(book.getPages())
+                .language(book.getLanguage())
+                .build();
+        bookRepository.save(bookToSave);
+
+        return modelMapper.map(bookToSave, BookDTO.class);
     }
 
     @Override
-    @BusinessLoggingEvent(message = "Books by filter")
+    @BusinessLoggingEvent(message = "Books by filter", value = Level.INFO)
     public Page<BookDTO> getBooksByFilter(BookFilter bookFilter, Pageable pageable) {
         QBook book = QBook.book;
 

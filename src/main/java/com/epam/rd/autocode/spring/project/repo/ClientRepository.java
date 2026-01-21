@@ -1,13 +1,14 @@
 package com.epam.rd.autocode.spring.project.repo;
 
-import com.epam.rd.autocode.spring.project.entity.ClientEntity;
+import com.epam.rd.autocode.spring.project.model.Client;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.repository.CrudRepository;
+import org.springframework.data.querydsl.QuerydslPredicateExecutor;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
 
 @Repository
-public interface ClientRepository extends JpaRepository<ClientEntity, Integer> {
-    Optional<ClientEntity> findByEmail(String email);
+public interface ClientRepository extends JpaRepository<Client, Long>,
+        QuerydslPredicateExecutor<Client> {
+    Optional<Client> findByEmail(String email);
 }

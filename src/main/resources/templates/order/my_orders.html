@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="#{label.orders}">Orders</title>
+    <style>
+        .filter-group { margin-bottom: 15px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+        .filter-group label { font-weight: bold; }
+        input { padding: 5px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+        .book-list { font-size: 0.9em; color: #555; padding-left: 15px; margin: 0; list-style-type: disc; }
+        .pagination { margin-top: 20px; display: flex; gap: 10px; list-style: none; padding: 0; }
+    </style>
+</head>
+<body>
+
+<div th:insert="~{fragment::header}"></div>
+
+<form th:action="@{/orders/my}" method="get">
+    <div class="filter-group">
+        <label th:text="#{label.sort}"></label>
+        <select name="sort">
+            <option value="orderDate,desc"
+                    th:selected="${param.sort != null and param.sort[0] == 'orderDate,desc'}"
+                    th:text="#{sort.date.desc}">Спочатку нові</option>
+            <option value="orderDate,asc"
+                    th:selected="${param.sort != null and param.sort[0] == 'orderDate,asc'}"
+                    th:text="#{sort.date.asc}">Спочатку старі</option>
+        </select>
+        <button type="submit" class="btn btn-primary">
+            <span th:text="#{button.filter}">Фільтрувати</span>
+        </button>
+    </div>
+</form>
+
+<hr>
+
+<table>
+    <thead>
+    <tr>
+        <th th:text="#{client.email}" sec:authorize="hasAnyRole('EMPLOYEE')"></th>
+        <th th:text="#{label.order.date}"></th>
+        <th th:text="#{label.order.items}"></th>
+        <th th:text="#{label.order.price}"></th>
+        <th th:text="#{label.order.status}"></th>
+        <th sec:authorize="hasAnyRole('EMPLOYEE')" th:text="#{label.actions}"></th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="order : ${orders.content}">
+        <td th:text="${order.clientEmail}" sec:authorize="hasAnyRole('EMPLOYEE')"></td>
+        <td th:text="${#temporals.format(order.orderDate, 'dd-MM-yyyy HH:mm')}"></td>
+        <td>
+            <ul class="book-list">
+                <li th:each="item : ${order.bookItems}">
+                    <span th:text="${item.bookName}">Назва книги</span>
+                    <span th:text="${item.quantity}">1</span>)
+                </li>
+            </ul>
+        </td>
+        <td th:text="${order.price} + ' ₴'"></td>
+        <td th:text="${order.orderStatus} + ' ₴'"></td>
+        <td sec:authorize="hasAnyRole('EMPLOYEE')">
+            <form th:action="@{/orders/updated-status}" method="post" style="display: inline;">
+                <input type ="hidden" name="_method" value="PATCH">
+                <input type="hidden" name="orderId" th:value="${order.id}">
+                <select name="orderStatus" required style="padding: 2px;">
+                    <option th:each="status : ${T(com.epam.rd.autocode.spring.project.model.enums.OrderStatusForEmployee).values()}"
+                            th:value="${status}"
+                            th:text="${status}"
+                            th:selected="${status}">
+                    </option>
+                </select>
+                <button type="submit" class="btn-submit">
+                    <span th:text="#{button.set.status}"></span>
+                </button>
+            </form>
+        </td>
+    </tr>
+    </tbody>
+</table>
+
+<div th:if="${orders.isEmpty()}">
+    <p th:text="#{label.not_found}"></p>
+</div>
+
+<div th:if="${orders.totalPages > 1}">
+    <ul class="pagination">
+        <li th:if="${orders.hasPrevious()}">
+            <a th:href="@{/orders/my(page=${orders.number - 1}, sort=${param.sort})}">
+                &laquo; <span th:text="#{label.previous}"></span>
+            </a>
+        </li>
+        <li>
+            <span th:text="${orders.number + 1} + ' / ' + ${orders.totalPages}"></span>
+        </li>
+        <li th:if="${orders.hasNext()}">
+            <a th:href="@{/orders/my( page=${orders.number + 1}, sort=${param.sort})}">
+                <span th:text="#{label.next}"></span> &raquo;
+            </a>
+        </li>
+    </ul>
+</div>
+
+<a th:href="@{/books}" class="btn btn-secondary" th:text="#{label.back}"></a>
+
+</body>
+</html>

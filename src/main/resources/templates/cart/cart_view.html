@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="#{label.cart.title}"></title>
+    <style>
+        .cart-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        .cart-table th, .cart-table td { border: 1px solid #ccc; padding: 12px; text-align: left; }
+        .cart-summary {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            text-align: right;
+            border-radius: 8px;
+        }
+        .total-price { font-size: 1.5em; color: #2c3e50; font-weight: bold; }
+        .quantity-input { width: 60px; padding: 5px; text-align: center; }
+        .actions { margin-top: 20px; display: flex; gap: 15px; align-items: center; }
+        .btn { padding: 10px 20px; border-radius: 5px; text-decoration: none; border: none; cursor: pointer; }
+        .btn-secondary { background-color: #6c757d; color: white; }
+        .btn-success { background-color: #28a745; color: white; }
+    </style>
+</head>
+<body>
+
+<div th:insert="~{fragment::header}"></div>
+
+<h1 th:text="#{label.cart.title}">Ваш кошик</h1>
+
+<div th:if="${cart == null or #lists.isEmpty(cart.items)}">
+    <div class="alert alert-info">
+        <p th:text="#{label.cart.empty}">Ваш кошик порожній.</p>
+        <a th:href="@{/books}" class="btn btn-secondary" th:text="#{label.back}"> </a>
+    </div>
+</div>
+
+<div th:if="${cart != null and !#lists.isEmpty(cart.items)}">
+    <table class="cart-table">
+        <thead>
+        <tr>
+            <th th:text="#{book.name}">Назва</th>
+            <th th:text="#{book.price}">Ціна</th>
+            <th th:text="#{book.quantity}">Кількість</th>
+            <th th:text="#{cart.sum}">Сума</th>
+            <th sec:authorize="hasAnyRole('CLIENT')" th:text="#{label.actions}">Дії</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="item : ${cart.items}">
+            <td th:text="${item.bookName}">Назва книги</td>
+            <td th:text="${item.price} + ' ₴'"></td>
+            <td>
+                <form th:action="@{/carts/update}" method="post">
+                    <input type="hidden" name="bookName" th:value="${item.bookName}">
+                    <input type="number" name="quantity"
+                           th:value="${item.quantity}"
+                           min="1" max="99"
+                           class="quantity-input"
+                           onchange="this.form.submit()">
+                </form>
+            </td>
+            <td th:text="${item.price * item.quantity} + ' ₴'"></td>
+
+            <td sec:authorize="hasAnyRole('CLIENT')">
+                <form th:action="@{/carts/remove}" method="post" style="display:inline;">
+                    <input type="hidden" name="_method" value="DELETE">
+                    <input type="hidden" name="bookName"  th:value="${item.bookName}">
+                    <button type="submit" class="btn-secondary">
+                        <span th:text="#{button.delete}">Видалити</span>
+                    </button>
+                </form>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+
+    <div class="cart-summary">
+        <span th:text="#{total_to_pay}">Разом до сплати:</span>
+        <span class="total-price" th:text="${cart.totalPrice} + ' ₴'"></span>
+    </div>
+
+    <div class="actions">
+        <a th:href="@{/books}" class="btn btn-secondary" th:text="#{label.back}">Назад</a>
+
+        <form th:action="@{/orders/checkout-confirm}" method="get">
+            <input type="hidden" name="email" th:value="${cart.clientEmail}">
+            <button type="submit" class="btn btn-success">
+                <span th:text="#{button.confirm_order}"></span>
+            </button>
+        </form>
+    </div>
+</div>
+
+</body>
+</html>

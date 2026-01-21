@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        body { font-family: sans-serif; line-height: 1.6; max-width: 600px; margin: 20px auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px; }
+        h1 { color: #333; border-bottom: 2px solid #f4f4f4; padding-bottom: 10px; }
+        .btn { padding: 10px 20px; border-radius: 5px; text-decoration: none; border: none; cursor: pointer; display: inline-block; }
+        .btn-secondary { background-color: #6c757d; color: white; }
+        .btn-success { background-color: #28a745; color: white; }
+        .btn-primary { background-color: #0d6efd; color: white; }
+        .alert-danger { color: #842029; background-color: #f8d7da; border: 1px solid #f5c2c7; padding: 15px; border-radius: 4px; margin: 15px 0; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2 th:text="#{button.confirm_order}"></h2>
+
+    <div class="order-details">
+        <h4></h4>
+        <ul>
+            <li th:each="item : ${cart.items}">
+                <span th:text="${item.bookName}"></span> —
+                <span th:text="${item.quantity}"></span> шт.
+            </li>
+        </ul>
+        <hr>
+        <p><strong th:text="${cart.totalPrice} + ' ₴'"></strong></p>
+        <p><strong th:text="${clientBalance} + ' ₴'"></strong></p>
+    </div>
+
+    <div th:if="${!canAfford}" class="alert alert-danger">
+        <p th:text="#{error.low_balance}"></p>
+        <a th:href="@{/clients/account/topUp}" class="btn btn-primary" th:text="#{label.top_up_account}"></a>
+    </div>
+
+    <div class="actions">
+        <a th:href="@{/carts}" class="btn btn-secondary" th:text="#{label.back}"></a>
+
+        <form th:if="${canAfford}" th:action="@{/orders/checkout}" method="post">
+            <button type="submit" class="btn btn-success" th:text="#{button.confirm_order}"></button>
+        </form>
+    </div>
+</div>
+</body>
+</html>

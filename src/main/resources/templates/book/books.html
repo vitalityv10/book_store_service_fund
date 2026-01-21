@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title>Книжковий Фільтр</title>
+    <style>
+        body { font-family: Arial, sans-serif; background-color: #f4f4f9; margin: 0; padding: 0; }
+        .container { padding: 20px; }
+
+        .filter-section { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 30px; }
+        .filter-group { margin-bottom: 15px; display: flex; gap: 15px; flex-wrap: wrap; align-items: center; }
+        .filter-group label { font-weight: bold; font-size: 0.9em; }
+        input, select { padding: 8px; border: 1px solid #ccc; border-radius: 4px; }
+        .btn-filter { background-color: #007bff; color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; }
+        .book-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .book-card {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: transform 0.2s;
+        }
+        .book-card:hover { transform: translateY(-5px); }
+        .book-title { font-size: 1.25em; font-weight: bold; color: #333; margin-bottom: 5px; }
+        .book-author { color: #666; font-style: italic; margin-bottom: 15px; }
+        .book-info { font-size: 0.9em; color: #555; line-height: 1.6; flex-grow: 1; }
+        .book-price { font-size: 1.4em; color: #28a745; font-weight: bold; margin: 15px 0; }
+        .book-tag { display: inline-block; background: #e9ecef; padding: 2px 8px; border-radius: 12px; font-size: 0.8em; margin-right: 5px; }
+
+        .card-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 15px; }
+        .btn-action { text-decoration: none; padding: 8px 12px; border-radius: 5px; font-size: 0.9em; text-align: center; flex: 1; }
+        .btn-yellow { background: #ffc107; color: black; }
+        .btn-blue { background: #007bff; color: white; }
+        .btn-red { background: #dc3545; color: white; }
+
+        .pagination { margin-top: 30px; display: flex; gap: 10px; list-style: none; padding: 0; justify-content: center; }
+        .pagination a { text-decoration: none; color: #007bff; padding: 8px 16px; border: 1px solid #ddd; border-radius: 4px; }
+    </style>
+</head>
+<body>
+
+<div th:insert="~{fragment::header}"></div>
+
+<div class="container">
+    <div class="filter-section">
+        <form th:action="@{/books}" method="get">
+            <div class="filter-group">
+                <label th:text="#{book.genre}"></label>
+                <select name="genre">
+                    <option value="" th:text="#{label.all}"></option>
+                    <label><span th:text="#{book.genre}"></span></label>
+                        <option value="Adventure" th:text="#{genre.adventure}"></option>
+                        <option value="Fantasy" th:text="#{genre.fantasy}"></option>
+                        <option value="Mystery" th:text="#{genre.mystery}"></option>
+                        <option value="Romance" th:text="#{genre.romance}"></option>
+                        <option value="Science Fiction" th:text="#{genre.sci_fi}"></option>
+                        <option value="Thriller" th:text="#{genre.thriller}"></option>
+                        <option value="Historical Fiction" th:text="#{genre.historical}"></option>
+                </select>
+
+                <label th:text="#{book.publicationDate}"></label>
+                <input type="date" name="publicationDate" th:value="${bookFilter.publicationDate()}">
+
+                <label th:text="#{book.ageGroup}"></label>
+                <select name="ageGroup">
+                    <option value="" th:text="#{label.all}">Всі</option>
+                    <option th:each="group : ${T(com.epam.rd.autocode.spring.project.model.enums.AgeGroup).values()}"
+                            th:value="${group}" th:text="#{${'AgeGroup.' + group}}" th:selected="${group == bookFilter.ageGroup()}"></option>
+                </select>
+
+                <label th:text="#{book.language}"></label>
+                <select name="language">
+                    <option value="" th:text="#{label.all}">Всі</option>
+                    <option th:each="lang : ${T(com.epam.rd.autocode.spring.project.model.enums.Language).values()}"
+                            th:value="${lang}" th:text="#{${'Language.' + lang}}" th:selected="${lang == bookFilter.language()}"></option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+
+                <label th:text="#{label.page}"></label>
+                <input type="number" name="page" th:value="${books.metaData.page}" min="0" style="width: 60px;">
+
+                <label th:text="#{label.size}"></label>
+                <input type="number" name="size" th:value="${books.metaData.size}" min="1" style="width: 60px;">
+
+                <label th:text="#{label.sort}"></label>
+                <select name="sort">
+                    <option value="price,asc" th:selected="${param.sort != null and param.sort[0] == 'price,asc'}" th:text="#{sort.price.asc}"></option>
+                    <option value="price,desc" th:selected="${param.sort != null and param.sort[0] == 'price,desc'}" th:text="#{sort.price.desc}"></option>
+                </select>
+
+                <input type="text" name="name" th:value="${bookFilter.name()}" th:placeholder="#{label.search.placeholder}" style="width: 250px;">
+                <button type="submit" class="btn-filter" th:text="#{button.search}"></button>
+            </div>
+        </form>
+    </div>
+
+    <div class="book-grid">
+        <div class="book-card" th:each="book : ${books.content}">
+            <div>
+                <div class="book-title" th:text="${book.name}"></div>
+                <div class="book-author" th:text="${book.author}"></div>
+
+                <div class="book-info">
+                    <span class="book-tag" th:text="${book.genre}"></span>
+                    <span class="book-tag" th:text="${book.language}"></span>
+                    <p th:text="${book.characteristics}"></p> </div>
+            </div>
+
+            <div>
+                <div class="book-price" th:text="${book.price} + ' ₴'"></div>
+
+                <div class="card-actions">
+                    <a sec:authorize="hasRole('CLIENT')"
+                       th:href="@{/carts/add/{n}(n=${book.name})}"
+                       class="btn-action btn-yellow" th:text="#{button.cart.add}"></a>
+
+                    <a th:href="@{/books/info/{n}(n=${book.name})}"
+                       class="btn-action btn-blue" th:text="#{book.info}"></a>
+
+                    <a sec:authorize="hasAnyRole('ADMIN', 'EMPLOYEE')"
+                       th:href="@{/books/edit/{n}(n=${book.name})}"
+                       class="btn-action btn-yellow" th:text="#{button.edit}"></a>
+
+                    <a sec:authorize="hasAnyRole('ADMIN', 'EMPLOYEE')"
+                       th:href="@{/books/info/{n}(n=${book.name})}"
+                       class="btn-action btn-red" th:text="#{button.delete}"></a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div th:if="${#lists.isEmpty(books.content)}" style="text-align: center; margin-top: 50px;">
+        <p th:text="#{label.not_found}"></p>
+    </div>
+
+    <div th:with="meta=${books.metaData}, totalPages=${T(java.lang.Math).ceil(meta.totalElements * 1.0 / meta.size).intValue()}">
+        <ul class="pagination" th:if="${totalPages > 1}">
+            <li th:if="${meta.page > 0}">
+                <a th:href="@{/books(page=${meta.page - 1}, size=${meta.size}, genre=${bookFilter.genre()}, name=${bookFilter.name()}, author=${bookFilter.author()})}">&laquo;</a>
+            </li>
+            <li>
+                <span th:text="(${meta.page} + 1) + ' / ' + ${totalPages}"></span>
+            </li>
+            <li th:if="${meta.page + 1 < totalPages}">
+                <a th:href="@{/books(page=${meta.page + 1}, size=${meta.size}, genre=${bookFilter.genre()}, name=${bookFilter.name()}, author=${bookFilter.author()})}">&raquo;</a>
+            </li>
+        </ul>
+    </div>
+</div>
+
+</body>
+</html>

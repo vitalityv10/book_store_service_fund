@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="#{label.orders}"></title>
+    <style>
+        .filter-group { margin-bottom: 15px; display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+        .filter-group label { font-weight: bold; }
+        input { padding: 5px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+        .pagination { margin-top: 20px; display: flex; gap: 10px; list-style: none; }
+        .btn-submit { display: inline-block; margin-top: 20px; padding: 10px 20px; background-color: #0d6efd; color: white; border: none; border-radius: 4px; cursor: pointer; text-decoration: none; font-size: 1rem; }
+    </style>
+</head>
+<body>
+
+<div th:insert="~{fragment::header}"></div>
+
+<form th:action="@{/orders/all}" method="get">
+    <div class="filter-group">
+        <label><span th:text="#{label.page}"></span></label>
+        <input type="number" name="page" th:value="${orders.metaData.page}" min="0" style="width: 50px;">
+
+        <label><span th:text="#{label.size}"></span></label>
+        <input type="number" name="size" th:value="${orders.metaData.size}" min="1" style="width: 50px;">
+
+        <label th:text="#{label.sort}"></label>
+        <select name="sort">
+            <option value="price,asc"
+                    th:selected="${param.sort != null and param.sort[0] == 'price,asc'}"
+                    th:text="#{sort.price.asc}"></option>
+            <option value="price,desc"
+                    th:selected="${param.sort != null and param.sort[0] == 'price,desc'}"
+                    th:text="#{sort.price.desc}"></option>
+            <option value="orderDate,asc"
+                    th:selected="${param.sort != null and param.sort[0] == 'orderDate,asc'}"
+                    th:text="#{sort.date.asc}"></option>
+            <option value="orderDate,desc"
+                    th:selected="${param.sort != null and param.sort[0] == 'orderDate,desc'}"
+                    th:text="#{sort.date.desc}"></option>
+        </select>
+        <button type="submit" class="btn-submit"> <span th:text="#{button.filter}"></span></button>
+    </div>
+
+    <div class="filter-group">
+        <label><span th:text="#{button.search}"></span></label>
+        <input type="text" name="clientEmail"
+               th:value="${orderFilter.clientEmail()}"
+               th:placeholder="#{label.search.placeholder_cl}"
+               style="width: 250px;">
+        <button type="submit" class="btn-submit">
+            <span th:text="#{button.search}"></span>
+        </button>
+    </div>
+</form>
+
+<hr>
+
+<<table>
+    <thead>
+    <tr>
+        <th th:text="#{label.order.date}"></th>
+        <th th:text="#{label.order.items}"></th>
+        <th th:text="#{label.order.price}"></th>
+        <th th:text="#{client.email}"></th>
+        <th th:text="#{client.email}"></th>
+        <th th:text="#{label.order.status}"></th>
+        <th sec:authorize="hasAnyRole('ADMIN')" th:text="#{label.actions}"></th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="o : ${orders.content}">
+        <td th:text="${#temporals.format(o.orderDate, 'dd-MM-yyyy HH:mm')}"></td>
+        <td>
+            <ul>
+                <li th:each="item : ${o.bookItems}">
+                    <span th:text="${item.bookName}"></span>
+                    (x<span th:text="${item.quantity}"></span>)
+                </li>
+            </ul>
+        </td>
+        <td th:text="${o.price} + ' ₴'"></td>
+        <td th:text="${o.clientEmail}"></td>
+        <td th:text="${o.employeeEmail ?: ''}"></td>
+        <td th:text="${o.orderStatus ?:''}"></td>
+
+        <td sec:authorize="hasAnyRole('ADMIN')">
+            <form th:action="@{/orders/assign}" method="post" style="display: inline;">
+                <input type ="hidden" name="_method" value="PATCH">
+                <input type="hidden" name="orderId" th:value="${o.id}">
+                <select name="employeeEmail" required style="padding: 2px;">
+                    <option value="" th:text="#{label.select.employee}"></option>
+                    <option th:each="emp : ${employees}"
+                            th:value="${emp.email}"
+                            th:text="${emp.email}"></option>
+                </select>
+                <button type="submit" class="btn-submit">
+                    <span th:text="#{button.assign}"></span>
+                </button>
+            </form>
+        </td>
+    </tr>
+    </tbody>
+</table>
+
+<div th:if="${#lists.isEmpty(orders.content)}">
+    <p th:text="#{label.not_found}"></p>
+</div>
+
+<div th:with="meta=${orders.metaData}, totalPages=${T(java.lang.Math).ceil(meta.totalElements * 1.0 / meta.size).intValue()}">
+    <ul class="pagination" th:if="${totalPages > 1}">
+        <li th:if="${meta.page > 0}">
+            <a th:href="@{/orders(page=${orders.number - 1}, size=${orders.size}, clientEmail=${orderFilter.clientEmail()})}">&laquo;</a>
+        </li>
+        <li>
+            <span th:text="(${meta.page} + 1) + ' / ' + ${totalPages}"></span>
+        </li>
+        <li th:if="${meta.page + 1 < totalPages}">
+            <a th:href="@{/orders(page=${orders.number + 1}, size=${orders.size}, clientEmail=${orderFilter.clientEmail()})}">&raquo;</a>
+        </li>
+    </ul>
+</div>
+</body>
+</html>

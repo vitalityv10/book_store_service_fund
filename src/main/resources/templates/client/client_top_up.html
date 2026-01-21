@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="#{label.top_up_account}">Top Up Account</title>
+    <style>
+        body { font-family: sans-serif; line-height: 1.6; max-width: 600px; margin: 20px auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px; }
+        h1 { color: #333; border-bottom: 2px solid #f4f4f4; padding-bottom: 10px; }
+        .info-row { margin-bottom: 15px; display: block; }
+        .label { font-weight: bold; width: 180px; color: #555; display: inline-block; }
+        .value-input { padding: 8px; border: 1px solid #ccc; border-radius: 4px; width: 200px; font-size: 1rem; }
+        .error-message { color: red; font-size: 0.85em; display: block; margin-top: 5px; }
+        .btn-submit { display: inline-block; margin-top: 20px; padding: 10px 20px; background-color: #0d6efd; color: white; border: none; border-radius: 4px; cursor: pointer; text-decoration: none; font-size: 1rem; }
+        .btn-submit:hover { background-color: #0b5ed7; }
+        .back-link { display: inline-block; margin-top: 20px; text-decoration: none; color: #007bff; margin-left: 15px; }
+    </style>
+</head>
+<body>
+
+<h1 th:text="#{label.top_up_title}">Поповнення балансу</h1>
+
+<form th:action="@{/clients/account/topUp}" th:method="patch" th:object="${client}">
+    <div class="info-row">
+        <span class="label" th:text="#{label.current_balance}">Поточний баланс:</span>
+        <span th:text="${client.balance} + ' ₴'">0.00</span>
+    </div>
+    <div class="info-row">
+        <label class="label" for="balance" th:text="#{label.top_up_amount}">Сума поповнення:</label>
+        <input type="number"
+               step="0.01"
+               id="balance"
+               th:field="*{balance}"
+               class="value-input"
+               placeholder="0.00"
+               required>
+
+        <span class="error-message" th:if="${#fields.hasErrors('balance')}" th:errors="*{balance}"></span>
+    </div>
+    <input type="hidden" th:field="*{email}">
+    <button type="submit" class="btn-submit" th:text="#{button.confirm_top_up}"></button>
+
+    <a th:href="@{/clients/account/{email}(email=${client.email})}"
+       class="back-link"
+       th:text="#{label.back}"></a>
+</form>
+</body>
+</html>

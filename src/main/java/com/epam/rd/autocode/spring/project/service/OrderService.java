@@ -15,6 +15,7 @@ public interface OrderService {
     List<OrderDTO> getOrdersByEmployee(String employeeEmail);
 
     OrderDTO addOrder(OrderDTO order);
+    OrderDTO getOrderById(UUID orderId);
 
     Page<OrderDTO> getOrdersByClient(String clientEmail, Pageable pageable);
     Page<OrderDTO> getOrdersByEmployee(String employeeEmail , Pageable pageable);
@@ -25,7 +26,12 @@ public interface OrderService {
 
     Page<OrderDTO> getAllOrders(OrderFilter orderFilter, Pageable pageable);
 
-    OrderDTO orderAssign(Long orderId, String employeeEmail);
+    OrderDTO orderAssign(UUID orderId, String employeeEmail);
 
-    OrderDTO changeOrderStatus(Long orderId, String status);
+    OrderDTO changeOrderStatus(UUID orderId, String status);
+
+    OrderDTO cancel(UUID orderId);
+
+    OrderDTO refund(UUID orderId, String name);
+
 }

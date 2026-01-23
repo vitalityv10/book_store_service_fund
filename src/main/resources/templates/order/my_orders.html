@@ -45,7 +45,7 @@
         <th th:text="#{label.order.items}"></th>
         <th th:text="#{label.order.price}"></th>
         <th th:text="#{label.order.status}"></th>
-        <th sec:authorize="hasAnyRole('EMPLOYEE')" th:text="#{label.actions}"></th>
+        <th th:text="#{label.actions}"></th>
     </tr>
     </thead>
     <tbody>
@@ -56,25 +56,45 @@
             <ul class="book-list">
                 <li th:each="item : ${order.bookItems}">
                     <span th:text="${item.bookName}">Назва книги</span>
-                    <span th:text="${item.quantity}">1</span>)
+                    (<span th:text="${item.quantity}">1</span>)
                 </li>
             </ul>
         </td>
         <td th:text="${order.price} + ' ₴'"></td>
-        <td th:text="${order.orderStatus} + ' ₴'"></td>
+        <td th:text="${order.orderStatus}"></td>
+
+        <td sec:authorize="hasAnyRole('CLIENT')">
+            <form th:if="${order.orderStatus.name() == 'PROCESSING' || order.orderStatus.name() == 'NEW'}"
+                  th:action="@{/orders/cancel/{id}(id=${order.id})}"
+                  method="post" style="display: inline;">
+                <input type="hidden" name="_method" value="PATCH">
+                <button type="submit" class="btn btn-danger btn-sm">
+                    <span th:text="#{button.cancel}">Cancel</span>
+                </button>
+            </form>
+
+            <form th:if="${order.orderStatus.name() == 'CANCELLED'}"
+                  th:action="@{/orders/refund/{id}(id=${order.id})}"
+                  method="get" style="display: inline;">
+                <button type="submit" class="btn btn-primary btn-sm">
+                    <span th:text="#{confirm.refund}">Refund</span>
+                </button>
+            </form>
+        </td>
+
         <td sec:authorize="hasAnyRole('EMPLOYEE')">
             <form th:action="@{/orders/updated-status}" method="post" style="display: inline;">
-                <input type ="hidden" name="_method" value="PATCH">
+                <input type="hidden" name="_method" value="PATCH">
                 <input type="hidden" name="orderId" th:value="${order.id}">
                 <select name="orderStatus" required style="padding: 2px;">
                     <option th:each="status : ${T(com.epam.rd.autocode.spring.project.model.enums.OrderStatusForEmployee).values()}"
                             th:value="${status}"
                             th:text="${status}"
-                            th:selected="${status}">
+                            th:selected="${status.name() == order.orderStatus.name()}">
                     </option>
                 </select>
-                <button type="submit" class="btn-submit">
-                    <span th:text="#{button.set.status}"></span>
+                <button type="submit" class="btn btn-primary btn-sm">
+                    <span th:text="#{button.set.status}">Set Status</span>
                 </button>
             </form>
         </td>

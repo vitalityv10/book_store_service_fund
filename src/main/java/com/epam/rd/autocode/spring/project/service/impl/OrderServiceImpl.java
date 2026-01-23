@@ -24,8 +24,8 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.naming.InsufficientResourcesException;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -58,6 +58,11 @@ public class OrderServiceImpl implements OrderService {
     @BusinessLoggingEvent(message = "Order created")
     public OrderDTO addOrder(OrderDTO orderDTO) {
         return modelMapper.map(orderDTO, OrderDTO.class);
+    }
+
+    @Override
+    public OrderDTO getOrderById(UUID orderId) {
+        return modelMapper.map(orderRepository.getOrderByIdIs(orderId), OrderDTO.class);
     }
 
     @Transactional(readOnly = true)
@@ -139,8 +144,8 @@ public class OrderServiceImpl implements OrderService {
     @Override
     @Transactional
     @BusinessLoggingEvent(message = "Order assigned", value = Level.INFO)
-    public OrderDTO orderAssign(Long orderId, String employeeEmail) {
-        Order order = orderRepository.getOrdersByIdIs(orderId)
+    public OrderDTO orderAssign(UUID orderId, String employeeEmail) {
+        Order order = orderRepository.getOrderByIdIs(orderId)
                 .orElseThrow(() -> new NotFoundException("Order not found"));
         Employee employee = employeeRepository.findByEmail(employeeEmail)
                 .orElseThrow(() -> new NotFoundException("Employee not found"));
@@ -153,11 +158,44 @@ public class OrderServiceImpl implements OrderService {
     @Override
     @Transactional
     @BusinessLoggingEvent(message = "Order status changed", value = Level.INFO)
-    public OrderDTO changeOrderStatus(Long orderId, String status) {
-        Order order = orderRepository.getOrdersByIdIs(orderId)
+    public OrderDTO changeOrderStatus(UUID orderId, String status) {
+        Order order = orderRepository.getOrderByIdIs(orderId)
                 .orElseThrow(() -> new NotFoundException("Order not found"));
         order.setOrderStatus(OrderStatus.valueOf(status));
         orderRepository.save(order);
+        return modelMapper.map(order, OrderDTO.class);
+    }
+
+    @Override
+    @Transactional
+    @BusinessLoggingEvent(message = "Order canceled", value = Level.INFO)
+    public OrderDTO cancel(UUID orderId) {
+        Order order = orderRepository.getOrderByIdIs(orderId)
+                .orElseThrow(() -> new NotFoundException("Order not found"));
+
+        if (order.getOrderStatus() != OrderStatus.PROCESSING) {
+            throw new IllegalStateException("Cannot cancel order in status: " + order.getOrderStatus());
+        }
+        order.setOrderStatus(OrderStatus.CANCELLED);
+        orderRepository.save(order);
+       return modelMapper.map(order, OrderDTO.class);
+    }
+
+    @Override
+    @Transactional
+    @BusinessLoggingEvent(message = "Order canceled", value = Level.INFO)
+    public OrderDTO refund(UUID orderId, String name) {
+        Order order = orderRepository.getOrderByIdIs(orderId)
+                .orElseThrow(() -> new NotFoundException("Order not found"));
+        Client client = clientRepository.findByEmail(name)
+                        .orElseThrow(() -> new NotFoundException("Client not found"));
+
+        BigDecimal clientBalance = client.getBalance();
+        client.setBalance(clientBalance.add(order.getPrice()));
+        order.setEmployee(null);
+        order.setOrderStatus(OrderStatus.REFUNDED);
+        orderRepository.save(order);
+
         return modelMapper.map(order, OrderDTO.class);
     }
 

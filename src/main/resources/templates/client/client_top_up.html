@@ -17,15 +17,16 @@
 </head>
 <body>
 
-<h1 th:text="#{label.top_up_title}">Поповнення балансу</h1>
+<div th:insert="~{fragment::locale}"></div>
+<h1 th:text="#{label.top_up_title}"></h1>
 
 <form th:action="@{/clients/account/topUp}" th:method="patch" th:object="${client}">
     <div class="info-row">
-        <span class="label" th:text="#{label.current_balance}">Поточний баланс:</span>
-        <span th:text="${client.balance} + ' ₴'">0.00</span>
+        <span class="label" th:text="#{label.current_balance}"></span>
+        <span th:text="${client.balance} + ' ₴'"></span>
     </div>
     <div class="info-row">
-        <label class="label" for="balance" th:text="#{label.top_up_amount}">Сума поповнення:</label>
+        <label class="label" for="balance" th:text="#{label.top_up_amount}"></label>
         <input type="number"
                step="0.01"
                id="balance"

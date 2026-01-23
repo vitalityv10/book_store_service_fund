@@ -13,8 +13,8 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name ="CLIENTS")
+@Table(name ="clients")
 public class Client extends User{
-    @Column(name = "BALANCE")
+    @Column(name = "balance")
     private BigDecimal balance;
 }

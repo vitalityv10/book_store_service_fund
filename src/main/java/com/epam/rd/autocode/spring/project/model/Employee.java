@@ -10,11 +10,11 @@ import java.time.LocalDate;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name ="EMPLOYEES")
+@Table(name ="employees")
 public class Employee extends User{
-    @Column(name = "PHONE")
+    @Column(name = "phone")
     private String phone;
-    @Column(name = "BIRTH_DATE")
+    @Column(name = "birth_date")
     private LocalDate birthDate;
 }
 //-- INSERT INTO EMPLOYEES (BIRTH_DATE, EMAIL, NAME,

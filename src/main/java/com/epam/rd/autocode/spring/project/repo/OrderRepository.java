@@ -1,6 +1,5 @@
 package com.epam.rd.autocode.spring.project.repo;
 
-import com.epam.rd.autocode.spring.project.dto.OrderDTO;
 import com.epam.rd.autocode.spring.project.model.Order;
 import com.querydsl.core.types.Predicate;
 import org.springframework.data.domain.Page;
@@ -10,12 +9,12 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.querydsl.QuerydslPredicateExecutor;
 import org.springframework.stereotype.Repository;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Repository
-public interface OrderRepository  extends JpaRepository<Order, Long>,
+public interface OrderRepository  extends JpaRepository<Order, UUID>,
         QuerydslPredicateExecutor<Order> {
     List<Order> getOrdersByClient_Email(String clientEmail);
 
@@ -30,5 +29,5 @@ public interface OrderRepository  extends JpaRepository<Order, Long>,
             countQuery = "SELECT count(o) FROM Order o")
     Page<Order> getAll(Pageable pageable, Predicate predicate);
 
-    Optional<Order> getOrdersByIdIs(Long id);
+    Optional<Order> getOrderByIdIs(UUID id);
 }

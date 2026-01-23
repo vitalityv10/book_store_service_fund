@@ -9,12 +9,12 @@ import java.util.*;
 @Entity
 @Getter
 @Setter
-@Table(name="CARTS" )
+@Table(name="carts" )
 public class Cart {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "ID")
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(name = "id", nullable = false, updatable = false)
+    private UUID id;
 
     @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @JoinColumn(name = "client_id", referencedColumnName = "id")
@@ -23,6 +23,6 @@ public class Cart {
     @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CartItem> items;
 
-    @Column(name = "price")
+    @Column(name = "total_price")
     private BigDecimal totalPrice;
 }

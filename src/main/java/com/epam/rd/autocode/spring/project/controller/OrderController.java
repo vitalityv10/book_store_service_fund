@@ -15,6 +15,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
+import java.util.UUID;
 
 @Controller
 @RequestMapping("/orders")
@@ -35,7 +36,6 @@ public class OrderController {
         } else {
             orders = orderService.getOrdersByClient(email, pageable);
         }
-
         model.addAttribute("orders", orders);
         model.addAttribute("email", email);
         return "order/my_orders";
@@ -53,7 +53,7 @@ public class OrderController {
 
     @PreAuthorize("hasRole('ADMIN')")
     @PatchMapping("/assign")
-    public String orderAssign(@RequestParam("orderId") Long orderId,
+    public String orderAssign(@RequestParam("orderId") UUID orderId,
                               @RequestParam("employeeEmail") String employeeEmail, Model model) {
         OrderDTO orderDTO = orderService.orderAssign(orderId, employeeEmail);
         model.addAttribute("orderId", orderDTO.getId());
@@ -62,7 +62,7 @@ public class OrderController {
     }
     @PreAuthorize("hasRole('EMPLOYEE')")
     @PatchMapping("/updated-status")
-    public String changeOrderStatus(@RequestParam("orderId") Long orderId,
+    public String changeOrderStatus(@RequestParam("orderId") UUID orderId,
                                     @RequestParam("orderStatus") String status, Model model) {
         OrderDTO orderDTO = orderService.changeOrderStatus(orderId, status);
         model.addAttribute("orderId", orderDTO.getId());
@@ -70,6 +70,7 @@ public class OrderController {
         return "redirect:/orders/my";
     }
 
+    @PreAuthorize("hasRole('CLIENT')")
     @GetMapping("/checkout-confirm")
     public String checkoutConfirmation(Principal principal, Model model ) {
         OrderConfirmation orderConfirmation = orderService.getOrderConfirmation(principal.getName());
@@ -81,10 +82,39 @@ public class OrderController {
         return "order/order_confirmation";
     }
 
+    @PreAuthorize("hasRole('CLIENT')")
     @PostMapping("/checkout")
     public String checkout(Principal principal) {
             orderService.createOrderFromCart(principal.getName());
             return "redirect:/orders/my";
+    }
+
+    @PreAuthorize("hasRole('CLIENT')")
+    @PatchMapping("/cancel/{id}")
+    public String cancel(@PathVariable("id") UUID orderId, Model model) {
+        OrderDTO orderDTO =  orderService.cancel(orderId);
+        model.addAttribute("order", orderDTO);
+        return "redirect:/orders/my";
+    }
+
+
+    @PreAuthorize("hasRole('CLIENT')")
+    @GetMapping("/refund/{id}")
+    public String refundForm(@PathVariable("id") UUID orderId, Model model) {
+        OrderDTO orderDTO =  orderService.getOrderById(orderId);
+        model.addAttribute("order", orderDTO);
+        return "order/refund";
+    }
+
+
+    @PreAuthorize("hasRole('CLIENT')")
+    @PatchMapping("/refund/{id}")
+    public String refund(@PathVariable("id") UUID orderId,
+                         Principal principal,
+                        @ModelAttribute("order") OrderDTO orderDTO) {
+         orderService.refund(orderId, principal.getName());
+
+        return "redirect:/orders/my";
     }
 
 }

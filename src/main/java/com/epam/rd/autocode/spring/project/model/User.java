@@ -6,6 +6,7 @@ import lombok.*;
 
 import java.math.BigDecimal;
 import java.util.Set;
+import java.util.UUID;
 
 @MappedSuperclass
 @Getter
@@ -14,23 +15,23 @@ import java.util.Set;
 @AllArgsConstructor
 public class User {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "ID")
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(name = "id", updatable = false, nullable = false)
+    private UUID id;
 
-    @Column(name = "EMAIL", unique = true)
+    @Column(name = "email", unique = true)
     private String email;
 
-    @Column(name = "NAME")
+    @Column(name = "name")
     private String name;
 
-    @Column(name = "PASSWORD")
+    @Column(name = "password")
     private String password;
 
     @ElementCollection(fetch = FetchType.EAGER, targetClass =  Role.class)
     @Enumerated(EnumType.STRING)
-    @JoinTable(name = "user_role", joinColumns = {@JoinColumn(name = "email"
-            ,referencedColumnName = "email") })
+    @JoinTable(name = "user_role", joinColumns = {@JoinColumn(name = "id"
+            ,referencedColumnName = "id") })
     @Column(name = "role", nullable = false)
     private Set<Role> roles;
 }

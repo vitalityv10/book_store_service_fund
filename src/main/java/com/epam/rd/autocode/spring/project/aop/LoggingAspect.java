@@ -24,7 +24,7 @@ public class LoggingAspect {
     @AfterThrowing(pointcut = "applicationPackagePointcut()", throwing = "e")
     public void logError(JoinPoint joinPoint, Throwable e) {
         String methodName = joinPoint.getSignature().toShortString();
-        log.error("[EXCEPTION] Метод: {}. Помилка: {}", methodName, e.getMessage());
+        log.error("[EXCEPTION] METHOD: {}. ERROR: {}", methodName, e.getMessage());
     }
 
     @Around("applicationPackagePointcut() && @annotation(businessEvent)")
@@ -60,8 +60,8 @@ public class LoggingAspect {
     }
 
     private String getCurrentUserContext() {
-        String username = "анонім";
-        String ipAddress = "невідомий IP";
+        String username = "anonymous";
+        String ipAddress = "unknown IP";
 
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth != null && auth.isAuthenticated()) {

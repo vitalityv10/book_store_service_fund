@@ -8,5 +8,5 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface SecurityLoggingEvent {
     String message() default " ";
-    Level value() default Level.WARN;
+    Level value() default Level.INFO;
 }

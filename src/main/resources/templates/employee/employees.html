@@ -59,7 +59,6 @@
         <th><span th:text="#{client.email}"></span></th>
         <th><span th:text="#{label.user.phone}"></span></th>
         <th><span th:text="#{label.user.birthDate}"></span></th>
-        <th sec:authorize="hasAnyRole('ADMIN', 'EMPLOYEE')"><span th:text="#{label.actions}"></span></th>
     </tr>
     </thead>
     <tbody>
@@ -68,17 +67,6 @@
         <td th:text="${e.email}"></td>
         <td th:text="${e.phone}"></td>
         <td th:text="${e.birthDate}"></td>
-        <td th:text="${e.birthDate}"></td>
-        <!--        <td sec:authorize="hasAnyRole('ADMIN', 'EMPLOYEE')">-->
-<!--        <a th:href="@{/clients/block(block=true, email=${c.email})}"-->
-<!--           class="btn btn-warning btn-sm" style="text-decoration: none; background: #ffc107; padding: 5px 10px; border-radius: 3px; color: black;">-->
-<!--            <span th:text="#{button.block}">Block</span>-->
-<!--        </a>-->
-<!--        <a th:href="@{/clients/block(block=false, email=${c.email})}"-->
-<!--           class="btn btn-success btn-sm" style="text-decoration: none; background: #28a745; padding: 5px 10px; border-radius: 3px; color: white;">-->
-<!--            <span th:text="#{button.unblock}"></span>-->
-<!--        </a>-->
-<!--        </td>-->
     </tr>
     </tbody>
 </table>

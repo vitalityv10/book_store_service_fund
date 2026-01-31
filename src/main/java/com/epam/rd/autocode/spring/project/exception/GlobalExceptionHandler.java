@@ -24,28 +24,22 @@ import java.util.Locale;
 public class GlobalExceptionHandler {
     private final MessageSource messageSource;
 
-    @ExceptionHandler({NotFoundException.class, NoResourceFoundException.class})
+    @ExceptionHandler({NotFoundException.class, NoResourceFoundException.class, AccessDeniedException.class})
     @ResponseStatus(HttpStatus.NOT_FOUND)
     public ModelAndView handleNotFound(Exception ex, Locale locale) {
-        return createModelAndView("error/404", ex, locale);
+        log.warn("[SECURITY] Access Denied for client - hiding as 404");
+        return createModelAndView("error/404", new Exception("error.not_found"), locale);
     }
     @ExceptionHandler(NoHandlerFoundException.class)
     public ModelAndView handleNotFound(NoHandlerFoundException ex, Locale locale) {
-        if (ex.getRequestURL().contains("favicon.ico")) return null;
-
         log.error("Page not found: {}", ex.getRequestURL());
         return createModelAndView("error/404", new Exception("error.not_found"), locale);
     }
 
-//    @ExceptionHandler(HttpClientErrorException.BadRequest.class)
-//    @ResponseStatus(HttpStatus.BAD_REQUEST)
-//    public ModelAndView handleBadRequest(Exception ex, Locale locale) {
-//        return createModelAndView("error/404", ex, locale);
-//    }
-
-    @ExceptionHandler({DisabledException.class, AccessDeniedException.class})
+    @ExceptionHandler({DisabledException.class})
     @ResponseStatus(HttpStatus.FORBIDDEN)
     public ModelAndView handleForbidden(Exception ex, Locale locale) {
+        log.warn("[SECURITY] Access denied, returning 404: {}", ex.getMessage());
         return createModelAndView("error/404", ex, locale);
     }
 
@@ -57,16 +51,26 @@ public class GlobalExceptionHandler {
     }
 
 
-    @ExceptionHandler({Exception.class, IllegalStateException.class, DataIntegrityViolationException.class})
+    @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ModelAndView handleAll(Exception ex, Locale locale) {
         log.error("Unhandled exception caught: ", ex);
-        if (ex instanceof IllegalStateException) {
-            return createModelAndView("error/404", new IllegalStateException("this book in order"), locale);
-        } else if (ex instanceof DataIntegrityViolationException) {
-            return createModelAndView("error/404", new DataIntegrityViolationException("employee has order"), locale);
+        if (ex instanceof DataIntegrityViolationException) {
+            return createModelAndView("error/404", ex, locale);
         }
-        return createModelAndView("error/404", new Exception("error.internal.server"), locale);
+        return createModelAndView("error/404", ex, locale);
+    }
+
+    @ExceptionHandler({IllegalStateException.class, DataIntegrityViolationException.class})
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ModelAndView handleConflict(Exception ex, Locale locale) {
+        return createModelAndView("error/409", ex, locale);
+    }
+
+    @ExceptionHandler({AlreadyExistException.class})
+    public ModelAndView handleAlreadyExist(Exception ex, Locale locale) {
+        log.error("AlreadyExist exception caught: ", ex);
+        return createModelAndView("error/404", ex, locale);
     }
 
     private ModelAndView createModelAndView(String viewName, Exception ex, Locale locale) {

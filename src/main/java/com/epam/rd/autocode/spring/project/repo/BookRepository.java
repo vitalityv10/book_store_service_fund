@@ -6,9 +6,10 @@ import org.springframework.data.querydsl.QuerydslPredicateExecutor;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
+import java.util.UUID;
 
 @Repository
-public interface BookRepository extends JpaRepository<Book, Integer>,
+public interface BookRepository extends JpaRepository<Book, UUID>,
         QuerydslPredicateExecutor<Book> {
-    Optional<Book> getBookByName(String name);
+    Optional<Book> getBookById(UUID id);
 }

@@ -9,15 +9,10 @@ import org.springframework.data.domain.Pageable;
 import java.util.*;
 
 public interface OrderService {
+    OrderDTO getOrderById(UUID orderId);
 
-    List<OrderDTO> getOrdersByClient(String clientEmail);
-
-    List<OrderDTO> getOrdersByEmployee(String employeeEmail);
-
-    OrderDTO addOrder(OrderDTO order);
-
-    Page<OrderDTO> getOrdersByClient(String clientEmail, Pageable pageable);
-    Page<OrderDTO> getOrdersByEmployee(String employeeEmail , Pageable pageable);
+    Page<OrderDTO> getOrdersByClient(String clientEmail, Pageable pageable, OrderFilter orderFilter);
+    Page<OrderDTO> getOrdersByEmployee(String employeeEmail , Pageable pageable, OrderFilter orderFilter);
 
     OrderDTO createOrderFromCart(String name);
 
@@ -25,7 +20,12 @@ public interface OrderService {
 
     Page<OrderDTO> getAllOrders(OrderFilter orderFilter, Pageable pageable);
 
-    OrderDTO orderAssign(Long orderId, String employeeEmail);
+    OrderDTO orderAssign(UUID orderId, String employeeEmail);
 
-    OrderDTO changeOrderStatus(Long orderId, String status);
+    OrderDTO changeOrderStatus(UUID orderId, String status);
+
+    OrderDTO cancel(UUID orderId);
+
+    OrderDTO refund(UUID orderId, String name);
+
 }

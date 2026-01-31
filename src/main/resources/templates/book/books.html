@@ -3,7 +3,7 @@
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta charset="UTF-8">
-    <title>Книжковий Фільтр</title>
+    <title></title>
     <style>
         body { font-family: Arial, sans-serif; background-color: #f4f4f9; margin: 0; padding: 0; }
         .container { padding: 20px; }
@@ -123,18 +123,18 @@
 
                 <div class="card-actions">
                     <a sec:authorize="hasRole('CLIENT')"
-                       th:href="@{/carts/add/{n}(n=${book.name})}"
+                       th:href="@{/carts/add/{n}(n=${book.id})}"
                        class="btn-action btn-yellow" th:text="#{button.cart.add}"></a>
 
-                    <a th:href="@{/books/info/{n}(n=${book.name})}"
+                    <a th:href="@{/books/info/{n}(n=${book.id})}"
                        class="btn-action btn-blue" th:text="#{book.info}"></a>
 
                     <a sec:authorize="hasAnyRole('ADMIN', 'EMPLOYEE')"
-                       th:href="@{/books/edit/{n}(n=${book.name})}"
+                       th:href="@{/books/edit/{n}(n=${book.id})}"
                        class="btn-action btn-yellow" th:text="#{button.edit}"></a>
 
                     <a sec:authorize="hasAnyRole('ADMIN', 'EMPLOYEE')"
-                       th:href="@{/books/info/{n}(n=${book.name})}"
+                       th:href="@{/books/info/{n}(n=${book.id})}"
                        class="btn-action btn-red" th:text="#{button.delete}"></a>
                 </div>
             </div>

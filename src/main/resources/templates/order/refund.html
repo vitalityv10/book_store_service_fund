@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="#{label.order.confirmation}">Order Confirmation</title>
+    <style>
+        body { font-family: sans-serif; line-height: 1.6; max-width: 600px; margin: 20px auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px; }
+        h1 { color: #333; border-bottom: 2px solid #f4f4f4; padding-bottom: 10px; }
+        .total-price { font-size: 1.5em; color: #2c3e50; font-weight: bold; }
+        .btn { padding: 10px 20px; border-radius: 5px; text-decoration: none; border: none; cursor: pointer; display: inline-block; font-size: 14px; }
+        .btn-secondary { background-color: #6c757d; color: white; }
+        .btn-success { background-color: #28a745; color: white; }
+        .alert-warning { color: #664d03; background-color: #fff3cd; border: 1px solid #ffe69c; padding: 15px; border-radius: 5px; margin: 15px 0; }
+        .order-info { margin-bottom: 20px; }
+        .order-info p { margin: 10px 0; }
+        .label { font-weight: bold; color: #555; }
+
+        .book-list { font-size: 0.95em; color: #444; padding-left: 20px; margin: 10px 0; list-style-type: disc; }
+        .book-item { margin-bottom: 5px; }
+        .quantity { font-weight: bold; color: #2c3e50; }
+    </style>
+</head>
+<body>
+
+<div th:insert="~{fragment::locale}"></div>
+<h1 th:text="#{label.order.refund}"></h1>
+
+<div class="order-info">
+    <p>
+        <span class="label" th:text="#{label.order.id}"></span>
+        <span th:text="${order.id}"></span>
+    </p>
+
+    <div class="books-section">
+        <span class="label" th:text="#{label.order.books}"></span>
+        <ul class="book-list">
+            <li th:each="item : ${order.bookItems}" class="book-item">
+                <span th:text="${item.bookName}"></span>
+                — <span class="quantity" th:text="${item.quantity}">1</span>
+                <span th:text="#{label.quantity.short}">шт.</span>
+            </li>
+        </ul>
+    </div>
+
+    <p>
+        <span class="label" th:text="#{label.order.price}"></span>
+        <span class="total-price" th:text="${order.price} + ' UAH'"></span>
+    </p>
+</div>
+
+<div class="alert-warning" th:text="#{message.refund.warning}"></div>
+
+<form th:action="@{/orders/refund/{id}(id=${order.id})}" th:method="post">
+    <input type="hidden" name="_method" value="PATCH">
+    <div class="actions">
+        <button type="submit" class="btn btn-success">
+            <span th:text="#{confirm.refund}"></span>
+        </button>
+
+        <a th:href="@{/orders/my}" class="btn btn-secondary">
+            <span th:text="#{button.cancel}"></span>
+        </a>
+    </div>
+</form>
+
+</body>
+</html>

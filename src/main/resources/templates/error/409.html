@@ -2,7 +2,7 @@
 <html lang="uk" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>409 - Конфлікт</title>
+    <title>409 </title>
     <style>
         body { font-family: sans-serif; text-align: center; padding: 50px; color: #333; }
         h1 { font-size: 50px; color: #f39c12; }
@@ -12,8 +12,9 @@
 </head>
 <body>
 <h1>409</h1>
-<h2>Конфлікт даних</h2>
-<p th:text="${error}">Виникла суперечність при обробці запиту.</p>
-<button onclick="history.back()" class="back-link">Повернутися назад</button>
+<h2>Conflict</h2>
+
+<p th:text="${error != null ? error : 'Conflict'}"></p>
+<button onclick="history.back()" class="back-link"></button>
 </body>
 </html>

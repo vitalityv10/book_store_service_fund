@@ -15,6 +15,7 @@
 </head>
 <body>
 
+<div th:insert="~{fragment::locale}"></div>
 <div class="container">
     <h2 th:text="#{button.confirm_order}"></h2>
 
@@ -27,8 +28,8 @@
             </li>
         </ul>
         <hr>
-        <p><strong th:text="${cart.totalPrice} + ' ₴'"></strong></p>
-        <p><strong th:text="${clientBalance} + ' ₴'"></strong></p>
+        <p><strong th:text="#{total_to_pay} + ' '+ ${cart.totalPrice} + ' ₴'"></strong></p>
+        <p><strong th:text="#{client.balance} +' '+ ${clientBalance} + ' ₴'"></strong></p>
     </div>
 
     <div th:if="${!canAfford}" class="alert alert-danger">

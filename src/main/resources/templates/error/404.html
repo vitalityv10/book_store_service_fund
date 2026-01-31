@@ -2,7 +2,7 @@
 <html lang="uk" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>Помилка</title>
+    <title></title>
     <style>
         body { font-family: sans-serif; text-align: center; padding: 50px; color: #333; background-color: #f9f9f9; }
         h1 { font-size: 80px; color: #e74c3c; margin-bottom: 10px; }
@@ -14,8 +14,8 @@
 </head>
 <body>
 <h1>!</h1>
-<h2>Сталася помилка</h2>
+<h2>Page is not found</h2>
 <p th:text="${message}"></p>
-<a href="/" class="back-link">Повернутися на головну</a>
+<a href="/" class="back-link"><span th:text="#{label.back}"></span></a>
 </body>
 </html>

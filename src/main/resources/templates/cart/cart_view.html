@@ -26,11 +26,11 @@
 
 <div th:insert="~{fragment::header}"></div>
 
-<h1 th:text="#{label.cart.title}">Ваш кошик</h1>
+<h1 th:text="#{label.cart.title}"></h1>
 
 <div th:if="${cart == null or #lists.isEmpty(cart.items)}">
     <div class="alert alert-info">
-        <p th:text="#{label.cart.empty}">Ваш кошик порожній.</p>
+        <p th:text="#{label.cart.empty}"></p>
         <a th:href="@{/books}" class="btn btn-secondary" th:text="#{label.back}"> </a>
     </div>
 </div>
@@ -39,16 +39,16 @@
     <table class="cart-table">
         <thead>
         <tr>
-            <th th:text="#{book.name}">Назва</th>
-            <th th:text="#{book.price}">Ціна</th>
-            <th th:text="#{book.quantity}">Кількість</th>
-            <th th:text="#{cart.sum}">Сума</th>
-            <th sec:authorize="hasAnyRole('CLIENT')" th:text="#{label.actions}">Дії</th>
+            <th th:text="#{book.name}"></th>
+            <th th:text="#{book.price}"></th>
+            <th th:text="#{book.quantity}"></th>
+            <th th:text="#{cart.sum}"></th>
+            <th sec:authorize="hasAnyRole('CLIENT')" th:text="#{label.actions}"></th>
         </tr>
         </thead>
         <tbody>
         <tr th:each="item : ${cart.items}">
-            <td th:text="${item.bookName}">Назва книги</td>
+            <td th:text="${item.bookName}"></td>
             <td th:text="${item.price} + ' ₴'"></td>
             <td>
                 <form th:action="@{/carts/update}" method="post">
@@ -67,7 +67,7 @@
                     <input type="hidden" name="_method" value="DELETE">
                     <input type="hidden" name="bookName"  th:value="${item.bookName}">
                     <button type="submit" class="btn-secondary">
-                        <span th:text="#{button.delete}">Видалити</span>
+                        <span th:text="#{button.delete}"></span>
                     </button>
                 </form>
             </td>
@@ -76,12 +76,12 @@
     </table>
 
     <div class="cart-summary">
-        <span th:text="#{total_to_pay}">Разом до сплати:</span>
+        <span th:text="#{total_to_pay}"></span>
         <span class="total-price" th:text="${cart.totalPrice} + ' ₴'"></span>
     </div>
 
     <div class="actions">
-        <a th:href="@{/books}" class="btn btn-secondary" th:text="#{label.back}">Назад</a>
+        <a th:href="@{/books}" class="btn btn-secondary" th:text="#{label.back}"></a>
 
         <form th:action="@{/orders/checkout-confirm}" method="get">
             <input type="hidden" name="email" th:value="${cart.clientEmail}">

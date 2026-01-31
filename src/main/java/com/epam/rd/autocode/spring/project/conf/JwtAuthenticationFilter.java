@@ -43,6 +43,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         Optional<String> accessToken = getTokenFromCookie(request, "JWT");
 
+        if (accessToken.isEmpty()) {
+            log.debug("No JWT cookie found for request: {}", request.getRequestURI());
+        }
+
         if (accessToken.isPresent() && jwtUtils.validateToken(accessToken.get())) {
             authenticateWithToken(accessToken.get());
         } else {
@@ -55,10 +59,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private void tryToRefreshAuthentication(String refreshToken, HttpServletResponse response) {
         if (!jwtUtils.validateToken(refreshToken)) {
+            log.info("Refresh token is invalid or expired");
             return;
         }
         String username = jwtUtils.getSubject(refreshToken);
-      //  String role = jwtUtils.getRole(refreshToken);
 
         if (username == null || username.isBlank()) {
             log.warn("Username is null in refresh token");
@@ -66,10 +70,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
         Set<String> roles = jwtUtils.getRoles(refreshToken);
 
+        List<SimpleGrantedAuthority> authorities = roles.stream()
+                .map(SimpleGrantedAuthority::new)
+                .toList();
+
         UserDetails userDetails = org.springframework.security.core.userdetails.User
                 .withUsername(username)
                 .password("")
-                .authorities(String.valueOf(roles))
+                .authorities(authorities)
                 .build();
         String newAccessToken = jwtUtils.generateAccessToken(userDetails);
 
@@ -80,6 +88,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         response.addCookie(newAccessTokenCookie);
 
         authenticateWithToken(newAccessToken);
+        log.info("Access token refreshed successfully for user: {}", username);
     }
 
     private void authenticateWithToken(String token) {
@@ -89,6 +98,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             UserDetails userDetails = userService.loadUserByUsername(subject);
 
             if (userDetails.isEnabled()) {
+                log.debug("Authenticating user: {} with roles: {}", subject, userDetails.getAuthorities());
                 UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                         userDetails,
                         null,

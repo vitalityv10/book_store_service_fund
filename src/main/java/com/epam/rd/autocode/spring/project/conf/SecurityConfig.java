@@ -12,6 +12,7 @@ import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -20,9 +21,11 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 @RequiredArgsConstructor
 @Slf4j
 class SecurityConfig{
@@ -33,19 +36,19 @@ class SecurityConfig{
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
-                .csrf(AbstractHttpConfigurer::disable)
+                .csrf(AbstractHttpConfigurer:: disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .headers(headers -> headers.frameOptions(frame -> frame.disable()))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/login","auth/registration"
+                        .requestMatchers("/auth/login","/auth/registration"
                                 , "/h2-console/**", "/messages",
-                                "/auth/logout", "/error/**", "/error").permitAll()
+                                "/auth/logout", "/error/**", "/error", "/auth/forgot-password/**").permitAll()
                         .requestMatchers("/books", "/books/info/",
                                 "/books/search").permitAll()
                         .requestMatchers("/clients/account/**",
-                                "/account").hasRole("CLIENT")
+                                "/account", "/carts", "/carts/**").hasRole("CLIENT")
                         .requestMatchers("/books/edit", "/orders/myOrders",
-                                "/orders/update", "/clients", "/account").hasRole("EMPLOYEE")
+                                "/orders/update", "/clients", "/employees/account").hasRole("EMPLOYEE")
                         .requestMatchers("/books/add").hasAnyRole("ADMIN", "EMPLOYEE")
                         .requestMatchers("/auth/employee/registration").hasRole("ADMIN")
                         .anyRequest().authenticated()
@@ -53,8 +56,10 @@ class SecurityConfig{
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
                 .exceptionHandling(ex -> ex
                         .accessDeniedHandler((request, response, accessDeniedException) -> {
-                            log.warn("Access Denied: {}", accessDeniedException.getMessage());
-                            request.getRequestDispatcher("/error/403").forward(request, response);
+                            log.warn("Access Denied for {} to {}: {}",
+                                    request.getRemoteUser(), request.getRequestURI(), accessDeniedException.getMessage());
+
+                            response.sendError(HttpServletResponse.SC_NOT_FOUND);;
                         })
                         .authenticationEntryPoint((request, response, authException) -> {
                             response.sendRedirect("/auth/login");

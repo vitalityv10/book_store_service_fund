@@ -6,19 +6,22 @@ import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
+import java.util.UUID;
 
 @Entity
 @Getter
 @Setter
-@Table(name = "BOOKS")
+@Table(name = "books")
 
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class Book {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(name ="id", updatable = false, nullable = false)
+    private UUID id;
 
     @Column(name = "name",
             nullable = false,
@@ -59,5 +62,8 @@ public class Book {
     @Enumerated(EnumType.STRING)
     @Column(name = "language")
     private Language language;
+
+    @OneToMany(mappedBy = "book", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private List<CartItem> cartItems;
 }
 

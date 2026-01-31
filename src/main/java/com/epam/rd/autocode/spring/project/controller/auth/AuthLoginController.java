@@ -10,14 +10,13 @@ import org.springframework.security.core.*;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
+
 import static com.epam.rd.autocode.spring.project.util.CookieUtils.clearCookie;
 
 @Controller
 @RequestMapping("/auth")
 @RequiredArgsConstructor
-@Slf4j
 public class AuthLoginController {
-
     private final AuthenticationManager authenticationManager;
     private final CookieUtils cookieUtils;
 
@@ -37,7 +36,6 @@ public class AuthLoginController {
                     new UsernamePasswordAuthenticationToken(email, password));
 
             cookieUtils.cookiesSetUp(response, authentication);
-          //  log.info("[SECURITY EVENT] Успішний вхід: {}", email);
 
             if (redirect == null || redirect.isBlank() || redirect.equals("null")) {
                 return "redirect:/books";
@@ -45,7 +43,7 @@ public class AuthLoginController {
             return "redirect:" + redirect;
     }
 
-    @RequestMapping(value = "/logout", method =   RequestMethod.GET)
+    @GetMapping(value = "/logout")
     @SecurityLoggingEvent(message = "Logout attempt to the service")
     public String logout(HttpServletResponse response) {
         clearCookie(response, "JWT");

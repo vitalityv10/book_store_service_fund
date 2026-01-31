@@ -43,7 +43,40 @@
     <span class="value" th:text="${employee.phone}"></span>
 </div>
 
-<div th:insert="~{fragment::employee_button}"></div>
+
+<div class="action-bar">
+    <form th:action="@{/employees/account/edit/{n}(n=${employee.email})}" method="get">
+        <button type="submit" class="btn btn-danger">
+            <span th:text="#{button.edit}"></span>
+        </button>
+    </form>
+</div>
+
+<div class="delete-account-section">
+    <div th:if="${canDelete}">
+        <form th:action="@{/employees/account/delete/{n}(n=${employee.email})}" method="post">
+            <input type="hidden" name="_method" value="DELETE">
+            <div class="info-row">
+                <p class="value" th:text="#{profile.delete_warning_ok}"></p>
+            </div>
+            <button type="submit" class="btn btn-danger">
+                <span th:text="#{button.delete_acc}"></span>
+            </button>
+        </form>
+    </div>
+
+    <div th:unless="${canDelete}">
+        <div class="info-row" style="color: #856404; background-color: #fff3cd; padding: 10px; border-radius: 5px; border: 1px solid #ffeeba;">
+            <span class="value">
+                <strong th:text="#{profile.delete_forbidden_title}"></strong><br>
+                <span th:text="#{profile.delete_forbidden_msg}"></span>
+            </span>
+        </div>
+        <button class="btn btn-secondary" disabled style="cursor: not-allowed; opacity: 0.6; margin-top: 10px;">
+            <span th:text="#{button.delete_acc}"></span>
+        </button>
+    </div>
+</div>
 
 <a href="/books" class="back-link" th:text="#{label.back}"></a>
 

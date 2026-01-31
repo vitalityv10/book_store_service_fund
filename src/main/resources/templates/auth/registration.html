@@ -27,7 +27,7 @@
 
 <h1 th:text="#{register.button}"></h1>
 
-<form th:action="@{${registerAction}}" method="POST" th:object="${user}">
+<form th:action="@{/auth/registration}" method="POST" th:object="${user}">
 
     <div class="info-row">
         <label class="label" for="email" th:text="#{login.email}"></label>
@@ -46,18 +46,6 @@
         <label class="label" for="password" th:text="#{login.password}"></label>
         <input class="value-input" id="password" th:field="*{password}" type="password" placeholder="********">
         <div class="error-message" th:if="${#fields.hasErrors('password')}" th:errors="*{password}"></div>
-    </div>
-
-    <div class="info-row" sec:authorize="hasAnyRole('EMPLOYEE', 'ADMIN')">
-        <label class="label" for="birth" th:text="#{label.user.birthDate}"></label>
-        <input class="value-input" id="birth" th:field="*{birthDate}" type="date" >
-        <div class="error-message" th:if="${#fields.hasErrors('birthDate')}" th:errors="*{birthDate}"></div>
-    </div>
-
-    <div class="info-row" sec:authorize="hasAnyRole('EMPLOYEE', 'ADMIN')">
-        <label class="label" for="phone" th:text="#{label.user.phone}"></label>
-        <input class="value-input" id="phone" th:field="*{phone}" type="text" placeholder="+380123456789" >
-        <div class="error-message" th:if="${#fields.hasErrors('phone')}" th:errors="*{phone}"></div>
     </div>
 
     <button type="submit" class="btn-submit" th:text="#{register.button}"></button>

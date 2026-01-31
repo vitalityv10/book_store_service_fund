@@ -46,6 +46,14 @@
 </form>
 
 <div class="register-section">
+    <span th:text="#{forgot.button}"></span>
+    <form th:action="@{/auth/forgot-password}" method="get" style="display: inline;">
+        <button type="submit" class="btn-link">
+            <span th:text="#{forgot.button}"></span>
+        </button>
+    </form>
+</div>
+<div class="register-section">
     <span th:text="#{login.no_account}"></span>
     <form th:action="@{/auth/registration}" method="get" style="display: inline;">
         <button type="submit" class="btn-link">

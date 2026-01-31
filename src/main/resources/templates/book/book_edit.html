@@ -23,7 +23,7 @@
 
 <h1 th:text="#{button.edit} + ': ' + ${book.name}"></h1>
 
-<form th:action="@{/books/edit/{n}(n=${book.name})}" th:object="${book}" method="post">
+<form th:action="@{/books/edit/{n}(n=${book.id})}" th:object="${book}" method="post">
     <input type="hidden" name="_method" value="PATCH">
 
     <div class="info-row">
@@ -97,7 +97,7 @@
     </div>
 
     <button type="submit" class="btn-submit" th:text="#{button.edit}"></button>
-    <a th:href="@{/books/info/{n}(n=${book.name})}" class="back-link" th:text="#{label.back}">Назад</a>
+    <a th:href="@{/books/info/{n}(n=${book.id})}" class="back-link" th:text="#{label.back}"></a>
 </form>
 
 </body>

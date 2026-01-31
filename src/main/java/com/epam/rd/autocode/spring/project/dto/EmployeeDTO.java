@@ -5,12 +5,15 @@ import lombok.*;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDate;
+import java.util.UUID;
 
 @Getter @Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
 public class EmployeeDTO{
+    private UUID employeeId;
+
     @NotBlank(message = "{validation.user.email.not_blank}")
     @Email(message = "{validation.user.email.invalid}")
     private String email;

@@ -11,13 +11,14 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 @Getter @Setter
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
 public class OrderDTO{
-    private Long id;
+    private UUID id;
     @NotBlank(message = "{order.client_email.not_blank}")
     @Email(message = "{order.email.invalid}")
     private String clientEmail;

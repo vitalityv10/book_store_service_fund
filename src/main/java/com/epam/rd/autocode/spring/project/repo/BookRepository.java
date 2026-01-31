@@ -11,5 +11,5 @@ import java.util.UUID;
 @Repository
 public interface BookRepository extends JpaRepository<Book, UUID>,
         QuerydslPredicateExecutor<Book> {
-    Optional<Book> getBookByName(String name);
+    Optional<Book> getBookById(UUID id);
 }

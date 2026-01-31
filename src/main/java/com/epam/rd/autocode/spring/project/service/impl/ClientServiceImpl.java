@@ -2,13 +2,13 @@ package com.epam.rd.autocode.spring.project.service.impl;
 
 import com.epam.rd.autocode.spring.project.aop.BusinessLoggingEvent;
 import com.epam.rd.autocode.spring.project.dto.*;
-import com.epam.rd.autocode.spring.project.dto.topUp.ClientTopUpRequest;
-import com.epam.rd.autocode.spring.project.dto.topUp.ClientTopUpResponse;
+import com.epam.rd.autocode.spring.project.dto.topUp.*;
 import com.epam.rd.autocode.spring.project.exception.NotFoundException;
 import com.epam.rd.autocode.spring.project.model.QClient;
 import com.epam.rd.autocode.spring.project.model.enums.Role;
 import com.epam.rd.autocode.spring.project.model.Client;
 import com.epam.rd.autocode.spring.project.repo.ClientRepository;
+import com.epam.rd.autocode.spring.project.repo.OrderRepository;
 import com.epam.rd.autocode.spring.project.service.ClientService;
 import com.querydsl.core.BooleanBuilder;
 import jakarta.transaction.Transactional;
@@ -30,14 +30,7 @@ public class ClientServiceImpl implements ClientService {
     private final PasswordEncoder passwordEncoder;
     private final ClientRepository clientRepository;
     private final ModelMapper modelMapper;
-
-    @Override
-    public List<ClientDTO> getAllClients() {
-        return clientRepository.findAll()
-                .stream()
-                .map(client -> modelMapper.map(client, ClientDTO.class))
-                .toList();
-    }
+    private final OrderRepository orderRepository;
 
     @Override
     public ClientDTO getClientByEmail(String email) {
@@ -48,30 +41,36 @@ public class ClientServiceImpl implements ClientService {
 
     @Override
     @Transactional
-    @BusinessLoggingEvent(message = "Client was updated")
+    @BusinessLoggingEvent(message = "Updating client")
     public ClientDTO updateClientByEmail(String email, ClientDTO client) {
         Client clientToUpdate = findClientByEmail(email);
-        clientToUpdate.setPassword(passwordEncoder.encode(client.getPassword()));
-        clientToUpdate.setName(client.getName());
-        clientToUpdate.setEmail(client.getEmail());
 
-        //modelMapper.map(client, clientToUpdate);
-
-        Client clientUpdated = clientRepository.save(clientToUpdate);
-        return modelMapper.map(clientUpdated, ClientDTO.class);
+        if(passwordEncoder.matches(client.getPassword(), clientToUpdate.getPassword()))
+        {
+           // clientToUpdate.setPassword(passwordEncoder.encode(client.getPassword()));
+            clientToUpdate.setName(client.getName());
+            clientToUpdate.setEmail(client.getEmail());
+            Client clientUpdated = clientRepository.save(clientToUpdate);
+            return modelMapper.map(clientUpdated, ClientDTO.class);
+        }else{
+            throw new IllegalArgumentException("password.mismatch");
+        }
     }
 
     @Override
     @Transactional
-    @BusinessLoggingEvent(message = "Client was deleted")
+    @BusinessLoggingEvent(message = "Client deleting ")
     public void deleteClientByEmail(String email) {
+        if (!canClientBeDeleted(email)) {
+            throw new IllegalStateException("error.client.has.active.orders");
+        }
         Client client = findClientByEmail(email);
         clientRepository.delete(client);
     }
 
     @Override
     @Transactional
-    @BusinessLoggingEvent(message = "Client was added")
+    @BusinessLoggingEvent(message = "Client registration")
     public ClientDTO addClient(ClientDTO clientDto) {
         Client client = new Client();
         client.setName(clientDto.getName());
@@ -131,15 +130,50 @@ public class ClientServiceImpl implements ClientService {
     public ClientTopUpResponse topUpClientByEmail(String email, ClientTopUpRequest clientTopUpRequest) {
         Client clientToTopUp = findClientByEmail(email);
         BigDecimal clientBalance = clientToTopUp.getBalance();
+
+        if (clientTopUpRequest.balance() == null || clientTopUpRequest.balance().compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Top-up amount must be greater than zero");
+        }
+
         BigDecimal totalBalance = clientBalance.add(clientTopUpRequest.balance());
         clientToTopUp.setBalance(totalBalance);
         Client topUpClient =  clientRepository.save(clientToTopUp);
         return modelMapper.map(topUpClient, ClientTopUpResponse.class);
     }
 
+    @Override
+    @Transactional
+    @BusinessLoggingEvent(message = "Client withdrawing")
+    public ClientTopUpResponse withdraw(String email, ClientTopUpRequest clientTopUpRequest) {
+        Client clientToWithdraw = findClientByEmail(email);
+        BigDecimal clientBalance = clientToWithdraw.getBalance();
+        BigDecimal withdrawAmount = clientTopUpRequest.balance();
+
+        if (withdrawAmount == null || withdrawAmount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("Withdraw amount must be greater than zero");
+        }
+
+        if (clientBalance.compareTo(withdrawAmount) < 0) {
+            throw new IllegalArgumentException("Insufficient balance");
+        }
+
+        BigDecimal totalBalance = clientBalance.subtract(withdrawAmount);
+        clientToWithdraw.setBalance(totalBalance);
+        Client topUpClient =  clientRepository.save(clientToWithdraw);
+        return modelMapper.map(topUpClient, ClientTopUpResponse.class);
+    }
+
+
     private Client findClientByEmail(String email) {
         return clientRepository.findByEmail(email)
                 .orElseThrow(() -> new NotFoundException("Client not found"));
     }
 
+    public boolean canClientBeDeleted(String email) {
+        Client client = findClientByEmail(email);
+        List<String> allowedStatuses = List.of("REFUNDED", "DELIVERED");
+        boolean isNotZero = client.getBalance().compareTo(BigDecimal.ZERO) != 0;
+        return !orderRepository.existsByClientIdAndOrderStatusNotIn(client.getId(), allowedStatuses)
+                && !isNotZero ;
+    }
 }

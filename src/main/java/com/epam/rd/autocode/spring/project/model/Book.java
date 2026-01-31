@@ -6,6 +6,7 @@ import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -61,5 +62,8 @@ public class Book {
     @Enumerated(EnumType.STRING)
     @Column(name = "language")
     private Language language;
+
+    @OneToMany(mappedBy = "book", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    private List<CartItem> cartItems;
 }
 

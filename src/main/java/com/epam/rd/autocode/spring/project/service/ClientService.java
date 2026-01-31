@@ -10,8 +10,6 @@ import java.util.List;
 
 public interface ClientService {
 
-    List<ClientDTO> getAllClients();
-
     ClientDTO getClientByEmail(String email);
 
     ClientDTO updateClientByEmail(String email, ClientDTO client);
@@ -27,4 +25,7 @@ public interface ClientService {
     ClientDTO blockClient(String email);
 
     ClientTopUpResponse topUpClientByEmail(String email, ClientTopUpRequest clientTopUpRequest);
+    public boolean canClientBeDeleted(String email);
+
+    ClientTopUpResponse withdraw(String email, ClientTopUpRequest clientTopUpRequest);
 }

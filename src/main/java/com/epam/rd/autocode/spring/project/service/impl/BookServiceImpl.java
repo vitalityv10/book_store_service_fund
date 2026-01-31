@@ -4,9 +4,12 @@ import com.epam.rd.autocode.spring.project.aop.BusinessLoggingEvent;
 import com.epam.rd.autocode.spring.project.dto.BookDTO;
 import com.epam.rd.autocode.spring.project.dto.BookFilter;
 import com.epam.rd.autocode.spring.project.dto.QPredicates;
+import com.epam.rd.autocode.spring.project.exception.AlreadyExistException;
 import com.epam.rd.autocode.spring.project.exception.NotFoundException;
 import com.epam.rd.autocode.spring.project.model.Book;
+import com.epam.rd.autocode.spring.project.model.BookItem;
 import com.epam.rd.autocode.spring.project.model.QBook;
+import com.epam.rd.autocode.spring.project.model.enums.OrderStatus;
 import com.epam.rd.autocode.spring.project.repo.BookItemRepository;
 import com.epam.rd.autocode.spring.project.repo.BookRepository;
 import com.epam.rd.autocode.spring.project.service.BookService;
@@ -17,13 +20,12 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
-import org.slf4j.event.Level;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -34,14 +36,8 @@ public class BookServiceImpl implements BookService {
     private final BookItemRepository bookItemRepository;
 
     @Override
-    public Page<BookDTO> getAllBooks(Pageable pageable) {
-        return bookRepository.findAll( pageable)
-                .map(book -> modelMapper.map(book, BookDTO.class));
-    }
-
-    @Override
-    public BookDTO getBookByName(String name) {
-        Book book = bookRepository.getBookByName(name).orElseThrow(
+    public BookDTO getBookById(UUID bookId) {
+        Book book = bookRepository.getBookById(bookId).orElseThrow(
                 () -> new NotFoundException("Book not found")
         );
         return modelMapper.map(book, BookDTO.class);
@@ -49,9 +45,9 @@ public class BookServiceImpl implements BookService {
 
     @Override
     @Transactional
-    @BusinessLoggingEvent(message = "updating book")
-    public BookDTO updateBookByName(String name, BookDTO book) {
-        Book extBook = bookRepository.getBookByName(name).orElseThrow(
+    @BusinessLoggingEvent(message = "Updating book details")
+    public BookDTO updateBookById(UUID bookId, BookDTO book) {
+        Book extBook = bookRepository.getBookById(bookId).orElseThrow(
                 () -> new NotFoundException("Book not found")
         );
         modelMapper.map(book,extBook);
@@ -62,15 +58,15 @@ public class BookServiceImpl implements BookService {
 
     @Override
     @Transactional
-    @BusinessLoggingEvent(message = "deleting book")
-    public void deleteBookByName(String name) {
-        Book book = bookRepository.getBookByName(name).orElseThrow(
+    @BusinessLoggingEvent(message = "Deleting book")
+    public void deleteBookById(UUID bookId) {
+        Book book = bookRepository.getBookById(bookId).orElseThrow(
                 () ->  new NotFoundException("Book not found")
         );
-
-        if (bookItemRepository.existsById(book.getId())) {
-            throw new IllegalStateException("Цю книгу не можна видалити, бо на неї оформлені замовлення. Спробуйте її архівувати.");
+        if (!canBeDeleted(bookId)) {
+            throw new IllegalStateException("error.book.in.use");
         }
+        bookItemRepository.deleteAllByBook_Id(bookId);
         bookRepository.delete(book);
     }
 
@@ -78,7 +74,10 @@ public class BookServiceImpl implements BookService {
     @Transactional
     @BusinessLoggingEvent(message = "Adding new book")
     public BookDTO addBook(BookDTO book) {
-        Book bookToSave = Book.builder()
+        bookRepository.getBookById(book.getId()).ifPresent(
+                b -> { throw new AlreadyExistException("Book already exists"); }
+        );
+       Book bookToSave = Book.builder()
                 .name(book.getName())
                 .author(book.getAuthor())
                 .price(book.getPrice())
@@ -96,7 +95,7 @@ public class BookServiceImpl implements BookService {
     }
 
     @Override
-    @BusinessLoggingEvent(message = "Books by filter", value = Level.INFO)
+    @BusinessLoggingEvent(message = "Books by filter")
     public Page<BookDTO> getBooksByFilter(BookFilter bookFilter, Pageable pageable) {
         QBook book = QBook.book;
 
@@ -114,7 +113,7 @@ public class BookServiceImpl implements BookService {
                 .add(searchExpression, exp->exp)
                 .add(bookFilter.genre(), book.genre::eq)
                 .add(bookFilter.ageGroup(), book.ageGroup::eq)
-                .add(bookFilter.publicationDate(), book.publicationDate::eq)
+                .add(bookFilter.publicationDate(), book.publicationDate::before)
                 .add(bookFilter.author(), book.author::containsIgnoreCase)
                 .add(bookFilter.pages(), book.pages::loe)
                 .add(bookFilter.language(), book.language::eq)
@@ -130,5 +129,11 @@ public class BookServiceImpl implements BookService {
                     .or(book.author.containsIgnoreCase(bookFilter.name()));
         }
         return searchExpression;
+    }
+
+    public boolean canBeDeleted(UUID bookId) {
+        List<OrderStatus> activeStatuses = List.of(OrderStatus.REFUNDED, OrderStatus.DELIVERED);
+        return !bookItemRepository
+                .existsByBookIdAndOrder_OrderStatusNotIn(bookId, activeStatuses);
     }
 }

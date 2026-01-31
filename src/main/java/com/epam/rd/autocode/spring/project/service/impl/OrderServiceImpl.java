@@ -37,52 +37,40 @@ public class OrderServiceImpl implements OrderService {
     private final ModelMapper modelMapper;
 
     @Override
-    @Transactional(readOnly = true)
-    public List<OrderDTO> getOrdersByClient(String clientEmail) {
-        return orderRepository.getOrdersByClient_Email(clientEmail)
-                .stream()
-                .map(orderDTO -> modelMapper.map(orderDTO, OrderDTO.class))
-                .toList();
-    }
-
-    @Override
-    public List<OrderDTO> getOrdersByEmployee(String employeeEmail) {
-        return  orderRepository.getOrdersByEmployee_Email(employeeEmail)
-                .stream()
-                .map(orderDTO -> modelMapper.map(orderDTO, OrderDTO.class))
-                .toList();
-    }
-
-    @Override
-    @Transactional
-    @BusinessLoggingEvent(message = "Order created")
-    public OrderDTO addOrder(OrderDTO orderDTO) {
-        return modelMapper.map(orderDTO, OrderDTO.class);
-    }
-
-    @Override
     public OrderDTO getOrderById(UUID orderId) {
         return modelMapper.map(orderRepository.getOrderByIdIs(orderId), OrderDTO.class);
     }
 
     @Transactional(readOnly = true)
     @Override
-    public Page<OrderDTO> getOrdersByClient(String clientEmail, Pageable pageable) {
-        return orderRepository.getOrdersByClient_Email(clientEmail, pageable)
+    public Page<OrderDTO> getOrdersByClient(String clientEmail, Pageable pageable, OrderFilter orderFilter) {
+        QOrder qOrder = QOrder.order;
+        BooleanBuilder builder = new BooleanBuilder();
+
+        builder.and(qOrder.client.email.eq(clientEmail));
+        Predicate predicate = getPredicate(orderFilter, qOrder,builder);
+
+        return orderRepository.findAll(predicate !=null ? predicate: builder, pageable)
                 .map(orderDTO -> modelMapper.map(orderDTO, OrderDTO.class));
     }
 
     @Override
     @Transactional(readOnly = true)
-    public Page<OrderDTO> getOrdersByEmployee(String employeeEmail, Pageable pageable) {
-        return orderRepository.getOrdersByEmployee_Email(employeeEmail, pageable)
+    public Page<OrderDTO> getOrdersByEmployee(String employeeEmail, Pageable pageable, OrderFilter orderFilter) {
+        QOrder qOrder = QOrder.order;
+        BooleanBuilder builder = new BooleanBuilder();
+
+        builder.and(qOrder.employee.email.eq(employeeEmail));
+        Predicate predicate = getPredicate(orderFilter, qOrder,builder);
+
+        return orderRepository.findAll(predicate !=null? predicate: builder, pageable)
                 .map(OrderDTO::toOrderDTO);
     }
 
     @SneakyThrows
     @Override
     @Transactional
-    @BusinessLoggingEvent(message = "Order created from cart")
+    @BusinessLoggingEvent(message = "Order creating")
     public OrderDTO createOrderFromCart(String email) {
         Client client = clientRepository.findByEmail(email)
                 .orElseThrow(() -> new NotFoundException("Client not found"));
@@ -105,7 +93,6 @@ public class OrderServiceImpl implements OrderService {
         return modelMapper.map(savedOrder, OrderDTO.class);
     }
 
-
     @SneakyThrows
     @Override
     public OrderConfirmation getOrderConfirmation(String clientEmail) {
@@ -119,6 +106,7 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
+    @BusinessLoggingEvent(message = "Orders by filter reviewing ")
     public Page<OrderDTO> getAllOrders(OrderFilter orderFilter, Pageable pageable) {
         QOrder qOrder = QOrder.order;
 
@@ -130,12 +118,7 @@ public class OrderServiceImpl implements OrderService {
             orderSearch.or(qOrder.employee.email.containsIgnoreCase(orderFilter.employeeEmail()));
         }
 
-        Predicate predicate = QPredicates.builder()
-                .add(orderFilter.orderDate(), qOrder.orderDate::before)
-                .add(orderFilter.price(), qOrder.price::loe)
-                .add(orderFilter.orderStatus(), qOrder.orderStatus::eq)
-                .add(orderSearch.getValue(), exp -> exp)
-                .build();
+        Predicate predicate = getPredicate(orderFilter, qOrder, orderSearch);
 
         return orderRepository.findAll(predicate != null ? predicate : new BooleanBuilder(), pageable)
                 .map(OrderDTO::toOrderDTO);
@@ -143,7 +126,7 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @Transactional
-    @BusinessLoggingEvent(message = "Order assigned", value = Level.INFO)
+    @BusinessLoggingEvent(message = "Order assigning")
     public OrderDTO orderAssign(UUID orderId, String employeeEmail) {
         Order order = orderRepository.getOrderByIdIs(orderId)
                 .orElseThrow(() -> new NotFoundException("Order not found"));
@@ -157,7 +140,7 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @Transactional
-    @BusinessLoggingEvent(message = "Order status changed", value = Level.INFO)
+    @BusinessLoggingEvent(message = "Order status changing")
     public OrderDTO changeOrderStatus(UUID orderId, String status) {
         Order order = orderRepository.getOrderByIdIs(orderId)
                 .orElseThrow(() -> new NotFoundException("Order not found"));
@@ -168,12 +151,13 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @Transactional
-    @BusinessLoggingEvent(message = "Order canceled", value = Level.INFO)
+    @BusinessLoggingEvent(message = "Order canceled")
     public OrderDTO cancel(UUID orderId) {
         Order order = orderRepository.getOrderByIdIs(orderId)
                 .orElseThrow(() -> new NotFoundException("Order not found"));
 
-        if (order.getOrderStatus() != OrderStatus.PROCESSING) {
+        if (order.getOrderStatus() != OrderStatus.PROCESSING &&
+                order.getOrderStatus() != OrderStatus.NEW) {
             throw new IllegalStateException("Cannot cancel order in status: " + order.getOrderStatus());
         }
         order.setOrderStatus(OrderStatus.CANCELLED);
@@ -183,13 +167,15 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     @Transactional
-    @BusinessLoggingEvent(message = "Order canceled", value = Level.INFO)
+    @BusinessLoggingEvent(message = "Order refunding")
     public OrderDTO refund(UUID orderId, String name) {
         Order order = orderRepository.getOrderByIdIs(orderId)
                 .orElseThrow(() -> new NotFoundException("Order not found"));
         Client client = clientRepository.findByEmail(name)
                         .orElseThrow(() -> new NotFoundException("Client not found"));
-
+        if (order.getOrderStatus() == OrderStatus.REFUNDED) {
+            throw new IllegalArgumentException("Refund claimed");
+        }
         BigDecimal clientBalance = client.getBalance();
         client.setBalance(clientBalance.add(order.getPrice()));
         order.setEmployee(null);
@@ -222,5 +208,15 @@ public class OrderServiceImpl implements OrderService {
                     return orderItem;
                 })
                 .toList();
+    }
+
+    private static Predicate getPredicate(OrderFilter orderFilter, QOrder qOrder, BooleanBuilder orderSearch) {
+        return QPredicates.builder()
+                .add(orderFilter.orderDate(), qOrder.orderDate::before)
+                .add(orderFilter.price(), qOrder.price::loe)
+                .add(orderFilter.orderStatus(), qOrder.orderStatus::eq)
+                .add(orderFilter.clientEmail(), qOrder.client.email::containsIgnoreCase)
+                .add(orderSearch.getValue(), exp -> exp)
+                .build();
     }
 }

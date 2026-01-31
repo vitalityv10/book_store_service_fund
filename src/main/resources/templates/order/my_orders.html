@@ -20,18 +20,46 @@
 
 <form th:action="@{/orders/my}" method="get">
     <div class="filter-group">
+        <label th:text="#{label.order.status}"></label>
+        <select name="orderStatus" class="form-select form-select-sm" style="width: auto;">
+            <option value="" th:text="#{label.all}"></option>
+            <option th:each="st : ${T(com.epam.rd.autocode.spring.project.model.enums.OrderStatus).values()}"
+                    th:value="${st}"
+                    th:text="${st}"
+                    th:selected="${param.status != null and param.status[0] == st.name()}">
+            </option>
+        </select>
+
         <label th:text="#{label.sort}"></label>
         <select name="sort">
             <option value="orderDate,desc"
                     th:selected="${param.sort != null and param.sort[0] == 'orderDate,desc'}"
-                    th:text="#{sort.date.desc}">Спочатку нові</option>
+                    th:text="#{sort.date.desc}"></option>
             <option value="orderDate,asc"
                     th:selected="${param.sort != null and param.sort[0] == 'orderDate,asc'}"
-                    th:text="#{sort.date.asc}">Спочатку старі</option>
+                    th:text="#{sort.date.asc}"></option>
+            <option value="price,asc"
+                    th:selected="${param.sort != null and param.sort[0] == 'price,asc'}"
+                    th:text="#{sort.price.asc}"></option>
+            <option value="price,desc"
+                    th:selected="${param.sort != null and param.sort[0] == 'price,desc'}"
+                    th:text="#{sort.price.desc}"></option>
         </select>
         <button type="submit" class="btn btn-primary">
-            <span th:text="#{button.filter}">Фільтрувати</span>
+            <span th:text="#{button.filter}"></span>
         </button>
+
+        <div class="filter-group" sec:authorize="hasRole('EMPLOYEE')">
+            <label><span th:text="#{button.search}"></span></label>
+            <input type="text" name="clientEmail"
+                   th:value="${orderFilter.clientEmail()}"
+                   th:placeholder="#{label.search.placeholder_cl}"
+                   style="width: 250px;">
+            <button type="submit" class="btn-submit">
+                <span th:text="#{button.search}"></span>
+            </button>
+        </div>
+
     </div>
 </form>
 
@@ -55,7 +83,7 @@
         <td>
             <ul class="book-list">
                 <li th:each="item : ${order.bookItems}">
-                    <span th:text="${item.bookName}">Назва книги</span>
+                    <span th:text="${item.bookName}"></span>
                     (<span th:text="${item.quantity}">1</span>)
                 </li>
             </ul>
@@ -69,7 +97,7 @@
                   method="post" style="display: inline;">
                 <input type="hidden" name="_method" value="PATCH">
                 <button type="submit" class="btn btn-danger btn-sm">
-                    <span th:text="#{button.cancel}">Cancel</span>
+                    <span th:text="#{button.cancel}"></span>
                 </button>
             </form>
 
@@ -77,7 +105,7 @@
                   th:action="@{/orders/refund/{id}(id=${order.id})}"
                   method="get" style="display: inline;">
                 <button type="submit" class="btn btn-primary btn-sm">
-                    <span th:text="#{confirm.refund}">Refund</span>
+                    <span th:text="#{confirm.refund}"></span>
                 </button>
             </form>
         </td>
@@ -102,22 +130,22 @@
     </tbody>
 </table>
 
-<div th:if="${orders.isEmpty()}">
+<div th:if="${orders.content.isEmpty()}">
     <p th:text="#{label.not_found}"></p>
 </div>
 
-<div th:if="${orders.totalPages > 1}">
-    <ul class="pagination">
-        <li th:if="${orders.hasPrevious()}">
-            <a th:href="@{/orders/my(page=${orders.number - 1}, sort=${param.sort})}">
+<div th:with="meta=${orders.metaData}, totalPages=${T(java.lang.Math).ceil(meta.totalElements * 1.0 / meta.size).intValue()}">
+    <ul class="pagination" th:if="${totalPages > 1}">
+        <li th:if="${meta.page > 0}">
+            <a th:href="@{/orders/my(page=${orders.number - 1}, sort=${param.sort}, status=${param.status}, clientEmail=${param.clientEmail})}" class="page-link">
                 &laquo; <span th:text="#{label.previous}"></span>
             </a>
         </li>
         <li>
             <span th:text="${orders.number + 1} + ' / ' + ${orders.totalPages}"></span>
         </li>
-        <li th:if="${orders.hasNext()}">
-            <a th:href="@{/orders/my( page=${orders.number + 1}, sort=${param.sort})}">
+        <li th:if="${meta.page + 1 < totalPages}">
+            <a class="page-link" th:href="@{/orders/my(page=${orders.number + 1}, sort=${param.sort}, status=${param.status}, clientEmail=${param.clientEmail})}">
                 <span th:text="#{label.next}"></span> &raquo;
             </a>
         </li>

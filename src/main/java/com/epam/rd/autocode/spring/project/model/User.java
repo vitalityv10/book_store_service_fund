@@ -34,4 +34,5 @@ public class User {
             ,referencedColumnName = "id") })
     @Column(name = "role", nullable = false)
     private Set<Role> roles;
+
 }

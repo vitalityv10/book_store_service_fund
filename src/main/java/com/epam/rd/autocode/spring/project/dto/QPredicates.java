@@ -1,5 +1,6 @@
 package com.epam.rd.autocode.spring.project.dto;
 
+import com.querydsl.core.BooleanBuilder;
 import com.querydsl.core.types.ExpressionUtils;
 import com.querydsl.core.types.Predicate;
 import lombok.*;
@@ -24,8 +25,14 @@ public class QPredicates {
         return this;
     }
 
-    public Predicate build(){ return ExpressionUtils.allOf(predicates);}
+    public Predicate build() {
+        Predicate result = ExpressionUtils.allOf(predicates);
+        return result != null ? result : new BooleanBuilder();
+    }
 
-    public Predicate buildOr() { return ExpressionUtils.anyOf(predicates);}
+    public Predicate buildOr() {
+        Predicate result = ExpressionUtils.anyOf(predicates);
+        return result != null ? result : new BooleanBuilder();
+    }
 
 }

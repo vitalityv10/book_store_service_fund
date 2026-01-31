@@ -16,13 +16,6 @@ import java.util.UUID;
 @Repository
 public interface OrderRepository  extends JpaRepository<Order, UUID>,
         QuerydslPredicateExecutor<Order> {
-    List<Order> getOrdersByClient_Email(String clientEmail);
-
-    List<Order> getOrdersByEmployee_Email(String employeeEmail);
-
-    Page<Order> getOrdersByClient_Email(String clientEmail, Pageable pageable);
-    Page<Order> getOrdersByEmployee_Email(String clientEmail, Pageable pageable);
-
     @Query(value = "SELECT o FROM Order o " +
             "JOIN FETCH o.client " +
             "LEFT JOIN FETCH o.employee",
@@ -30,4 +23,7 @@ public interface OrderRepository  extends JpaRepository<Order, UUID>,
     Page<Order> getAll(Pageable pageable, Predicate predicate);
 
     Optional<Order> getOrderByIdIs(UUID id);
+    boolean existsByClientIdAndOrderStatusNotIn(UUID clientId, List<String> status);
+
+    boolean existsByEmployeeId(UUID employeeId);
 }

@@ -9,16 +9,10 @@ import org.springframework.data.domain.Pageable;
 import java.util.*;
 
 public interface OrderService {
-
-    List<OrderDTO> getOrdersByClient(String clientEmail);
-
-    List<OrderDTO> getOrdersByEmployee(String employeeEmail);
-
-    OrderDTO addOrder(OrderDTO order);
     OrderDTO getOrderById(UUID orderId);
 
-    Page<OrderDTO> getOrdersByClient(String clientEmail, Pageable pageable);
-    Page<OrderDTO> getOrdersByEmployee(String employeeEmail , Pageable pageable);
+    Page<OrderDTO> getOrdersByClient(String clientEmail, Pageable pageable, OrderFilter orderFilter);
+    Page<OrderDTO> getOrdersByEmployee(String employeeEmail , Pageable pageable, OrderFilter orderFilter);
 
     OrderDTO createOrderFromCart(String name);
 

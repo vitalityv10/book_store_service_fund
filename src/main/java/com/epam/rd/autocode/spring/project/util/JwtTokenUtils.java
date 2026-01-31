@@ -1,9 +1,7 @@
 package com.epam.rd.autocode.spring.project.util;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.JwtException;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.*;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -17,8 +15,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @Component
+@Slf4j
 public class JwtTokenUtils {
-
     @Value("${jwt.secret}")
     private String secret;
 
@@ -27,7 +25,6 @@ public class JwtTokenUtils {
 
 
     private String generateToken(UserDetails userDetails, Duration expiration) {
-
         Date now = new Date();
         Date exp = new Date(now.getTime() + expiration.toMillis());
 //        String role = userDetails.getAuthorities().stream()
@@ -39,6 +36,9 @@ public class JwtTokenUtils {
                 .stream()
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.toSet());
+
+        log.debug("Generating token for user: {} with expiration: {} minutes",
+                userDetails.getUsername(), expiration.toMinutes());
 
         return Jwts.builder()
                 .setSubject(userDetails.getUsername())
@@ -60,9 +60,16 @@ public class JwtTokenUtils {
         try {
             Jwts.parserBuilder().setSigningKey(secret).build().parseClaimsJws(token);
             return true;
+        } catch (ExpiredJwtException e) {
+            log.warn("JWT token is expired: {}", e.getMessage());
+        } catch (SignatureException e) {
+            log.warn("Invalid JWT signature: {}", e.getMessage());
+        } catch (MalformedJwtException e) {
+            log.warn("Invalid JWT token format: {}", e.getMessage());
         } catch (JwtException | IllegalArgumentException e) {
-            return false;
+            log.error("JWT validation error: {}", e.getMessage());
         }
+        return false;
     }
 
     public String getSubject(String token) {

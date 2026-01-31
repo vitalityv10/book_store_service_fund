@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS user_role (
     PRIMARY KEY (id, role)
 );
 CREATE TABLE IF NOT EXISTS forgot_password (
-    id SERIAL PRIMARY KEY,
+    id BIGSERIAL PRIMARY KEY,
     otp INT NOT NULL,
     expiry_date TIMESTAMP NOT NUll,
     email VARCHAR(50)
@@ -29,7 +29,7 @@ CREATE TABLE IF NOT EXISTS forgot_password (
 
 CREATE TABLE IF NOT EXISTS books (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    name VARCHAR(255) UNIQUE NOT NULL,
+    name VARCHAR(255) NOT NULL,
     genre VARCHAR(50),
     age_group VARCHAR(20) NOT NULL,
     price DECIMAL(19, 2) NOT NULL CHECK (price >= 0),
@@ -43,12 +43,12 @@ CREATE TABLE IF NOT EXISTS books (
 
 CREATE TABLE IF NOT EXISTS orders (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    client_id UUID NOT NULL,
+    client_id UUID ,
     employee_id UUID,
     order_date TIMESTAMP NOT NULL,
     price DECIMAL(19, 2) NOT NULL CHECK (price >= 0),
     order_status VARCHAR(50),
-    FOREIGN KEY(client_id) REFERENCES clients(id),
+    FOREIGN KEY(client_id) REFERENCES clients(id) ON DELETE SET NULL,
     FOREIGN KEY(employee_id) REFERENCES employees(id)
 );
 
@@ -65,7 +65,7 @@ CREATE TABLE IF NOT EXISTS carts (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
     client_id UUID NOT NUll,
     total_price DECIMAL(19, 2) NOT NULL CHECK (total_price >= 0),
-    FOREIGN KEY(client_id) REFERENCES clients(id)
+    FOREIGN KEY(client_id) REFERENCES clients(id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS cart_items (

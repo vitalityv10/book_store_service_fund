@@ -5,19 +5,18 @@ import com.epam.rd.autocode.spring.project.dto.BookFilter;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-import java.util.List;
+import java.util.UUID;
 
 public interface BookService {
 
-    Page<BookDTO> getAllBooks(Pageable pageable);
+    BookDTO getBookById(UUID bookId);
 
-    BookDTO getBookByName(String name);
+    BookDTO updateBookById(UUID bookId, BookDTO book);
 
-    BookDTO updateBookByName(String name, BookDTO book);
-
-    void deleteBookByName(String name);
+    void deleteBookById(UUID bookId);
 
     BookDTO addBook(BookDTO book);
 
     Page<BookDTO> getBooksByFilter(BookFilter filter , Pageable pageable);
+    boolean canBeDeleted(UUID bookId);
 }

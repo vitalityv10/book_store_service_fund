@@ -8,8 +8,10 @@ import com.epam.rd.autocode.spring.project.exception.NotFoundException;
 import com.epam.rd.autocode.spring.project.model.Book;
 import com.epam.rd.autocode.spring.project.model.Cart;
 import com.epam.rd.autocode.spring.project.model.CartItem;
+import com.epam.rd.autocode.spring.project.model.Client;
 import com.epam.rd.autocode.spring.project.repo.BookRepository;
 import com.epam.rd.autocode.spring.project.repo.CartRepository;
+import com.epam.rd.autocode.spring.project.repo.ClientRepository;
 import com.epam.rd.autocode.spring.project.service.CartService;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
@@ -18,8 +20,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -27,17 +31,19 @@ import java.util.stream.Collectors;
 public class CartServiceImpl implements CartService {
     private final CartRepository cartRepository;
     private final BookRepository bookRepository;
+    private final ClientRepository clientRepository;
 
     @Override
     @Transactional
-    public void addBookToCart(String email, String bookName) {
+    @BusinessLoggingEvent(message = "Book adding to cart")
+    public void addBookToCart(String email, UUID bookId) {
         Cart cart = getOriginCart(email);
 
-        Book book = bookRepository.getBookByName(bookName)
-                .orElseThrow(() -> new RuntimeException("Книга не знайдена: "));
+        Book book = bookRepository.getBookById(bookId)
+                .orElseThrow(() -> new RuntimeException("Book not found"));
 
         Optional<CartItem> existingItem = cart.getItems().stream()
-                .filter(item -> item.getBook().getName().equals(bookName))
+                .filter(item -> item.getBook().getName().equals(book.getName()))
                 .findFirst();
 
         if (existingItem.isPresent()) {
@@ -49,21 +55,33 @@ public class CartServiceImpl implements CartService {
             newItem.setQuantity(1);
             cart.getItems().add(newItem);
         }
-
         recalculateTotalPrice(cart);
     }
 
     @Override
-    @Transactional(readOnly = true)
+    @Transactional
     public CartDTO getCart(String clientEmail) {
         return cartRepository.getCartByClientEmail(clientEmail)
                 .map(CartDTO::toCartDTO)
-                .orElseThrow(() -> new NotFoundException("Cart is empty"));
+                .orElseGet(() -> CartDTO.toCartDTO(addCart(clientEmail)));
+    }
+
+    private Cart addCart(String clientEmail) {
+        Client client = clientRepository.findByEmail(clientEmail)
+                .orElseThrow(() -> new NotFoundException("Client not found"));
+
+        Cart cart = new Cart();
+        cart.setClient(client);
+        cart.setTotalPrice(BigDecimal.ZERO);
+        cart.setItems(new ArrayList<>());
+        Cart savedCart = cartRepository.save(cart);
+
+        return savedCart;
     }
 
     @Override
     @Transactional
-    @BusinessLoggingEvent(message = "Removed Book from cart")
+    @BusinessLoggingEvent(message = "Removing Book from cart")
     public void removeBookFromCart(String clientEmail, String bookName) {
         Cart cart = getOriginCart(clientEmail);
 
@@ -74,14 +92,14 @@ public class CartServiceImpl implements CartService {
 
     @Transactional
     @Override
-    @BusinessLoggingEvent(message = "Update quantity in cart")
+    @BusinessLoggingEvent(message = "Updating quantity in cart")
     public void updateQuantity(String email, String bookName, int quantity) {
         Cart cart = getOriginCart(email);
 
         CartItem item = cart.getItems().stream()
                 .filter(i -> i.getBook().getName().equals(bookName))
                 .findFirst()
-                .orElseThrow(() -> new RuntimeException("Item not found"));
+                .orElseThrow(() -> new NotFoundException("Item not found"));
 
         item.setQuantity(quantity);
 
@@ -96,7 +114,7 @@ public class CartServiceImpl implements CartService {
 
     private Cart getOriginCart(String email) {
         return cartRepository.getCartByClientEmail(email)
-                .orElseThrow(() -> new NotFoundException("Cart not found") );
+                .orElseGet(() -> addCart(email));
     }
 
     private void recalculateTotalPrice(Cart cart) {

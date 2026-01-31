@@ -6,12 +6,14 @@ import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.UUID;
 
 @Getter @Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 public class BookDTO {
+     private UUID id;
 
     @NotBlank(message = "{validation.book.name.not_blank}")
     @Size(min = 2, max = 100, message = "{validation.book.name.size}")

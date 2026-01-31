@@ -32,7 +32,7 @@ public class ForgotPasswordController {
     public String verifyMail(@RequestParam("email") String email, Model model) {
         if (!userService.existsByEmail(email)){
             model.addAttribute("error", "Email doesn't exist");
-            return "auth/forgot_password";
+            return "redirect:/auth/forgot_password";
         };
         ForgotPassword forgotPassword = forgotPasswordService.getForgotPassword(email);
         emailService.sendMessage(email, forgotPassword.getOtp());
@@ -57,6 +57,12 @@ public class ForgotPasswordController {
 
         if(fp.getExpiryDate().isBefore(LocalDateTime.now())){
             forgotPasswordService.deleteById(fp.getId());
+
+            ForgotPassword newFp = forgotPasswordService.getForgotPassword(email);
+            emailService.sendMessage(email, newFp.getOtp());
+            forgotPasswordService.saveForgotPassword(newFp);
+
+            model.addAttribute("email", email);
             model.addAttribute("error", "OTP has expired");
             return "auth/verify_otp";
         }

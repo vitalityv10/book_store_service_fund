@@ -47,12 +47,12 @@ public class LoggingAspect {
 
         try {
             Object result = joinPoint.proceed();
-            String msg = String.format("[SECURITY SUCCESS] %s. Користувач: %s. Метод: %s",
+            String msg = String.format("[SECURITY SUCCESS] %s. User: %s. Method: %s",
                     securityEvent.message(), userContext, methodName);
             logWithLevel(securityEvent.value(), msg);
             return result;
         } catch (Throwable t) {
-            String msg = String.format("[SECURITY ALERT] %s. Користувач: %s. Спроба невдала: %s",
+            String msg = String.format("[SECURITY ALERT] %s. User: %s. Unsuccessful: %s",
                     securityEvent.message(), userContext, t.getMessage());
             log.error(msg);
             throw t;

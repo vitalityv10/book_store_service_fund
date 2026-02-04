@@ -47,6 +47,12 @@
             </button>
         </form>
 
+        <form th:action="@{/books/add}" method="get" sec:authorize="hasAnyRole('EMPLOYEE')" class="m-0">
+            <button type="submit" class="btn btn-primary">
+                <span th:text="#{button.book.add}"></span>
+            </button>
+        </form>
+
         <div th:insert="~{fragment::admin_panel}" class="m-0"></div>
         <div th:insert="~{fragment::locale}" class="ms-auto"></div>
     </div>

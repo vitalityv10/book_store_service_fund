@@ -11,8 +11,8 @@ import java.util.TimeZone;
 @RequiredArgsConstructor
 public class BookStoreServiceSolutionApplication {
     public static void main(String[] args) {
-SpringApplication.run(BookStoreServiceSolutionApplication.class, args);
-
+        TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
+       SpringApplication.run(BookStoreServiceSolutionApplication.class, args);
     }
     @PostConstruct
     public void init() {

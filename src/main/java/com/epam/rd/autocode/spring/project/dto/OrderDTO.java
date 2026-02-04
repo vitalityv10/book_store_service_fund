@@ -1,5 +1,6 @@
 package com.epam.rd.autocode.spring.project.dto;
 
+import com.epam.rd.autocode.spring.project.model.Client;
 import com.epam.rd.autocode.spring.project.model.Employee;
 import com.epam.rd.autocode.spring.project.model.Order;
 import com.epam.rd.autocode.spring.project.model.enums.OrderStatus;
@@ -41,7 +42,9 @@ public class OrderDTO{
     public static OrderDTO toOrderDTO(Order order){
         return new OrderDTO(
                 order.getId(),
-                order.getClient().getEmail(),
+                Optional.ofNullable(order.getClient())
+                        .map(Client::getEmail)
+                        .orElse("Client delete acc"),
                 Optional.ofNullable(order.getEmployee())
                         .map(Employee::getEmail)
                         .orElse("Not Assigned"),

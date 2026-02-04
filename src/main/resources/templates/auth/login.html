@@ -29,6 +29,10 @@
     <span th:text="#{login.error.invalid}"></span>
 </div>
 
+<div th:if="${param.blocked}" class="error-alert">
+    <span th:text="#{login.error.blocked}"></span>
+</div>
+
 <form th:action="@{/auth/login}" method="post">
     <div class="info-row">
         <label class="label" for="email" th:text="#{login.email}"></label>

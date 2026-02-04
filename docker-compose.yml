@@ -9,13 +9,11 @@ services:
       POSTGRES_USER: ${DB_USERNAME}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       TZ: Europe/Kyiv
-      PGTZ: Europe/Kyiv
+#      PGTZ: Europe/Kyiv
     ports:
       - "5433:5432"
-    command: postgres -c timezone=Europe/Kyiv
+#    command: postgres -c timezone=Europe/Kyiv
     volumes:
       - postgres_data:/var/lib/postgresql/data
-
-
 volumes:
   postgres_data:

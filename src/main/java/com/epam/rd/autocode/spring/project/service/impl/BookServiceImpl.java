@@ -107,7 +107,7 @@ public class BookServiceImpl implements BookService {
                 .findAll(finalPredicate, pageable)
                 .map(book1 ->  modelMapper.map(book1, BookDTO.class));
     }
-
+ // select b from Book b  where ... like...
     private static Predicate getPredicate(BookFilter bookFilter, BooleanExpression searchExpression, QBook book) {
         Predicate predicate = QPredicates.builder()
                 .add(searchExpression, exp->exp)

@@ -191,4 +191,43 @@ class ClientServiceImplTest {
          assertThrows(IllegalArgumentException.class, () ->
          clientService.topUpClientByEmail(client.getEmail(),  clientTopUpRequest));
     }
+
+    @Test
+    void withdraw_Success() {
+        BigDecimal initialBalance = new BigDecimal("1000.00");
+        client.setBalance(initialBalance);
+        clientRepository.save(client);
+
+        BigDecimal withdrawAmount = new BigDecimal("200.00");
+        ClientTopUpRequest request = new ClientTopUpRequest(client.getEmail(), withdrawAmount);
+
+        var response = clientService.withdraw(client.getEmail(), request);
+
+        assertNotNull(response);
+        assertEquals(0, new BigDecimal("800.00").compareTo(response.getBalance()));
+        Client updatedClient = clientRepository.findByEmail(client.getEmail()).get();
+        assertEquals(0, new BigDecimal("800.00").compareTo(updatedClient.getBalance()));
+    }
+
+    @Test
+    void withdraw_InsufficientFunds_ThrowsException() {
+        client.setBalance(new BigDecimal("50.00"));
+        clientRepository.save(client);
+
+        ClientTopUpRequest request = new ClientTopUpRequest(client.getEmail(), new BigDecimal("100.00"));
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+                clientService.withdraw(client.getEmail(), request));
+
+        assertEquals("Insufficient balance", exception.getMessage());
+    }
+
+    @Test
+    void withdraw_NegativeAmount_ThrowsException() {
+        ClientTopUpRequest request = new ClientTopUpRequest(client.getEmail(), new BigDecimal("-50.00"));
+
+        IllegalArgumentException exception = assertThrows(IllegalArgumentException.class, () ->
+                clientService.withdraw(client.getEmail(), request));
+
+        assertEquals("Withdraw amount must be greater than zero", exception.getMessage());
+    }
 }

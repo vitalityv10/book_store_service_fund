@@ -190,4 +190,78 @@ class OrderServiceImplTest {
         assertFalse(result.isEmpty());
         assertEquals(client.getEmail(), result.getContent().get(0).getClientEmail());
     }
+
+    @Test
+    void getOrderById() {
+        Order order = new Order();
+        order.setClient(client);
+        order.setPrice(new BigDecimal("150.00"));
+        order.setOrderStatus(OrderStatus.NEW);
+
+        BookItem bookItem = BookItem.builder()
+                .book(book)
+                .quantity(1)
+                .order(order)
+                .build();
+        order.setBookItems(Collections.singletonList(bookItem));
+
+        Order savedOrder = orderRepository.save(order);
+        OrderDTO result = orderService.getOrderById(savedOrder.getId());
+
+        assertNotNull(result);
+        assertEquals(savedOrder.getId(), result.getId());
+        assertEquals(client.getEmail(), result.getClientEmail());
+        assertEquals(savedOrder.getPrice(), result.getPrice());
+    }
+
+    @Test
+    void getOrdersByClient() {
+        Order order = new Order();
+        order.setClient(client);
+        order.setPrice(new BigDecimal("300.00"));
+        order.setOrderStatus(OrderStatus.NEW);
+
+        BookItem bookItem = BookItem.builder()
+                .book(book)
+                .quantity(2)
+                .order(order)
+                .build();
+        order.setBookItems(Collections.singletonList(bookItem));
+        orderRepository.save(order);
+
+        OrderFilter emptyFilter = new OrderFilter(null, null, null, null, null);
+
+        Page<OrderDTO> result = orderService.getOrdersByClient(client.getEmail(), PageRequest.of(0, 10), emptyFilter);
+
+        assertNotNull(result);
+        assertFalse(result.isEmpty());
+        assertEquals(1, result.getTotalElements());
+        assertEquals(client.getEmail(), result.getContent().get(0).getClientEmail());
+    }
+
+    @Test
+    void getOrdersByEmployee() {
+        Order order = new Order();
+        order.setClient(client);
+        order.setEmployee(employee);
+        order.setPrice(new BigDecimal("150.00"));
+        order.setOrderStatus(OrderStatus.PROCESSING);
+
+        BookItem bookItem = BookItem.builder()
+                .book(book)
+                .quantity(1)
+                .order(order)
+                .build();
+        order.setBookItems(Collections.singletonList(bookItem));
+        orderRepository.save(order);
+
+        OrderFilter emptyFilter = new OrderFilter(null, null, null, null, null);
+
+        Page<OrderDTO> result = orderService.getOrdersByEmployee(employee.getEmail(), PageRequest.of(0, 10), emptyFilter);
+
+        assertNotNull(result);
+        assertFalse(result.isEmpty());
+        assertEquals(1, result.getTotalElements());
+        assertEquals(employee.getEmail(), result.getContent().get(0).getEmployeeEmail());
+    }
 }

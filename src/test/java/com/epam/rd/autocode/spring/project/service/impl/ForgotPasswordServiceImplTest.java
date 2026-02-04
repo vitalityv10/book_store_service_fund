@@ -47,7 +47,7 @@ class ForgotPasswordServiceImplTest {
     @Test
     void saveForgotPassword_Success() {
         String email= "new@email.com";
-        forgotPasswordRepository.save(forgotPassword);
+        forgotPasswordService.saveForgotPassword(forgotPassword);
 
         ForgotPassword saved = forgotPasswordService.getForgotPassword(email, forgotPassword.getOtp());
         assertNotNull(saved);

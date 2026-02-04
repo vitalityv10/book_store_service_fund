@@ -11,11 +11,10 @@ public class PageResponse<T> {
     List<T> content;
     MetaData metaData;
 
-public static <T>  PageResponse<T> of(Page<T> page) {
+ public static <T>  PageResponse<T> of(Page<T> page) {
     var metadata = new MetaData(page.getNumber(), page.getSize(), page.getTotalElements());
     return new PageResponse<>(page.getContent(), metadata);
 }
-
     @Value
     public static class MetaData {
         int page;
@@ -23,5 +22,4 @@ public static <T>  PageResponse<T> of(Page<T> page) {
         long totalElements;
 
     }
-
 }

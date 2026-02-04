@@ -1,7 +1,6 @@
 package com.epam.rd.autocode.spring.project.dto;
 
 import com.epam.rd.autocode.spring.project.model.BookItem;
-import com.epam.rd.autocode.spring.project.model.Cart;
 import jakarta.validation.constraints.*;
 import lombok.*;
 

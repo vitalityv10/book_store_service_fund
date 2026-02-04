@@ -27,7 +27,6 @@ import java.util.*;
 @RequiredArgsConstructor
 @Slf4j
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
-
     private final UserService userService;
     private final JwtTokenUtils jwtUtils;
 

@@ -9,6 +9,7 @@ import org.springframework.expression.spel.SpelEvaluationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.DisabledException;
+import org.springframework.security.authentication.LockedException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
@@ -31,25 +32,30 @@ public class GlobalExceptionHandler {
         return createModelAndView("error/404", new Exception("error.not_found"), locale);
     }
     @ExceptionHandler(NoHandlerFoundException.class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
     public ModelAndView handleNotFound(NoHandlerFoundException ex, Locale locale) {
         log.error("Page not found: {}", ex.getRequestURL());
         return createModelAndView("error/404", new Exception("error.not_found"), locale);
     }
 
-    @ExceptionHandler({DisabledException.class})
-    @ResponseStatus(HttpStatus.FORBIDDEN)
-    public ModelAndView handleForbidden(Exception ex, Locale locale) {
-        log.warn("[SECURITY] Access denied, returning 404: {}", ex.getMessage());
-        return createModelAndView("error/404", ex, locale);
-    }
+//    @ExceptionHandler({DisabledException.class})
+//    @ResponseStatus(HttpStatus.FORBIDDEN)
+//    public ModelAndView handleForbidden(Exception ex, Locale locale) {
+//        log.warn("[SECURITY] Access denied, returning 404: {}", ex.getMessage());
+//        return createModelAndView("error/404", ex, locale);
+//    }
 
 
     @ExceptionHandler(AuthenticationException.class)
     public String handleAuthError(AuthenticationException ex) {
         log.warn("Authentication failed: {}", ex.getMessage());
+
+        if (ex instanceof DisabledException || ex instanceof LockedException) {
+            log.warn("[SECURITY] Access denied, returning 404: {}", ex.getMessage());
+            return "redirect:/auth/login?blocked=true";
+        }
         return "redirect:/auth/login?error=true";
     }
-
 
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
@@ -68,9 +74,10 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler({AlreadyExistException.class})
+    @ResponseStatus(HttpStatus.CONFLICT)
     public ModelAndView handleAlreadyExist(Exception ex, Locale locale) {
         log.error("AlreadyExist exception caught: ", ex);
-        return createModelAndView("error/404", ex, locale);
+        return createModelAndView("error/409", ex, locale);
     }
 
     private ModelAndView createModelAndView(String viewName, Exception ex, Locale locale) {

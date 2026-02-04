@@ -58,7 +58,6 @@ class SecurityConfig{
                         .accessDeniedHandler((request, response, accessDeniedException) -> {
                             log.warn("Access Denied for {} to {}: {}",
                                     request.getRemoteUser(), request.getRequestURI(), accessDeniedException.getMessage());
-
                             response.sendError(HttpServletResponse.SC_NOT_FOUND);;
                         })
                         .authenticationEntryPoint((request, response, authException) -> {
